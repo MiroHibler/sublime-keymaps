@@ -1,0 +1,16 @@
+[
+	{
+		"id": "view",
+		"children":
+		[
+			{
+				"caption": "Keymaps Cheat Sheet",
+				"id": "keymaps",
+				"command": "keymaps",
+				"children":
+				[
+				]
+			}
+		]
+	}
+]

@@ -1,0 +1,73 @@
+
+Thank you for installing Keymaps -- a tool that can greatly improve your work.
+
+This plugin shows all enabled keymaps in a searchable color-coded list.
+
+You can select an entry which will open corresponding ".sublime-keymap" file and select the keymap for eventual editing.
+
+Here's an example of possible output (OS X, truncated):
+
+	Case Conversion (7)
+		[ ⌃ ⌥ C ], [ ⌃ ⌥ S ]: Convert Case: snake_case
+		[ ⌃ ⌥ C ], [ ⌃ ⌥ C ]: Convert Case: camelCase
+		[ ⌃ ⌥ C ], [ ⌃ ⌥ P ]: Convert Case: PascalCase
+		[ ⌃ ⌥ C ], [ ⌃ ⌥ D ]: Convert Case: dot.case
+		[ ⌃ ⌥ C ], [ ⌃ ⌥ H ]: Convert Case: dash-case
+		[ ⌃ ⌥ C ], [ ⌃ ⌥ W ]: Convert Case: separate␣words
+		[ ⌃ ⌥ C ], [ ⌃ ⌥ / ]: Convert Case: separate/with/slash
+
+
+Features
+========
+
+- Shows Cheat Sheet (overview) of keymaps
+- Helps search for keymaps
+- Open the keymap file for the chosen keymap
+
+
+Usage
+=====
+
+From the main menu, select: View -> Keymaps Cheat Sheet, or use
+key combination [ ⌃ ]+[ ⌥ ]+[ ? ] / [ Ctrl ]+[ Alt ]+[ ? ]
+
+Use these commands to browse the Cheat Sheet:
+
+[ ⌃ ]+[ ⌥ ]+[ ⇧ ]+[ N ]		/	[ CTRL ]+[ ALT ]+[ SHIFT ]+[ N ]:		Navigate Forward
+
+[ ⌃ ]+[ ⌥ ]+[ ⇧ ]+[ DOWN ]	/	[ CTRL ]+[ ALT ]+[ SHIFT ]+[ DOWN ]:	Navigate Forward
+
+[ ⌃ ]+[ ⌥ ]+[ ⇧ ]+[ J ]		/	[ CTRL ]+[ ALT ]+[ SHIFT ]+[ J ]:		Navigate Forward
+
+[ ⌃ ]+[ ⌥ ]+[ ⇧ ]+[ P ]		/	[ CTRL ]+[ ALT ]+[ SHIFT ]+[ P ]:		Navigate Backward
+
+[ ⌃ ]+[ ⌥ ]+[ ⇧ ]+[ UP ]	/	[ CTRL ]+[ ALT ]+[ SHIFT ]+[ UP ]:		Navigate Backward
+
+[ ⌃ ]+[ ⌥ ]+[ ⇧ ]+[ K ]		/	[ CTRL ]+[ ALT ]+[ SHIFT ]+[ K ]:		Navigate Backward
+
+[ ⌃ ]+[ ⌥ ]+[ ⇧ ]+[ C ]		/	[ CTRL ]+[ ALT ]+[ SHIFT ]+[ C ]:		Clear Selection
+
+[ ⌃ ]+[ ⌥ ]+[ ⇧ ]+[ ENTER ]	/	[ CTRL ]+[ ALT ]+[ SHIFT ]+[ ENTER ]:	Open Keymap File For Edit
+
+
+Warning
+=======
+
+If you experience problems or editor crashes please file an issue at https://github.com/MiroHibler/sublime-keymaps/issues.
+
+
+Options
+=======
+
+Mac users can opt for a nice simbols instead of text for keys.
+
+Go to Sublime Text 2 > Preferences > Settings - User and add this to the file:
+
+"keymaps": { "show_osx_keys": true }
+
+Enjoy!
+
+
+---------------------------------
+Follow me on Twitter: @MiroHibler
+---------------------------------

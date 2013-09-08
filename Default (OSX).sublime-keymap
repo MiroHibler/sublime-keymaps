@@ -1,0 +1,75 @@
+[
+	{
+		"keys": ["ctrl+alt+?"], "command": "keymaps"
+	},
+	{
+		"keys": ["ctrl+alt+shift+n"],
+		"command": "navigate_keymaps",
+		"context":
+		[
+			{"key": "setting.command_mode", "operand": true}
+		],
+		"args": {"direction": "forward"}
+	},
+	{
+		"keys": ["ctrl+alt+shift+down"],
+		"command": "navigate_keymaps",
+		"context":
+		[
+			{"key": "setting.command_mode", "operand": true}
+		],
+		"args": {"direction": "forward"}
+	},
+	{
+		"keys": ["ctrl+alt+shift+j"],
+		"command": "navigate_keymaps",
+		"context":
+		[
+			{"key": "setting.command_mode", "operand": true}
+		],
+		"args": {"direction": "forward"}
+	},
+	{
+		"keys": ["ctrl+alt+shift+p"],
+		"command": "navigate_keymaps",
+		"context":
+		[
+			{"key": "setting.command_mode", "operand": true}
+		],
+		"args": {"direction": "backward"}
+	},
+	{
+		"keys": ["ctrl+alt+shift+up"],
+		"command": "navigate_keymaps",
+		"context":
+		[
+			{"key": "setting.command_mode", "operand": true}
+		],
+		"args": {"direction": "backward"}
+	},
+	{
+		"keys": ["ctrl+alt+shift+k"],
+		"command": "navigate_keymaps",
+		"context":
+		[
+			{"key": "setting.command_mode", "operand": true}
+		],
+		"args": {"direction": "backward"}
+	},
+	{
+		"keys": ["ctrl+alt+shift+c"],
+		"command": "clear_selection",
+		"context":
+		[
+			{"key": "setting.command_mode", "operand": true}
+		]
+	},
+	{
+		"keys": ["ctrl+alt+shift+enter"],
+		"command": "goto_keymap",
+		"context":
+		[
+			{"key": "setting.command_mode", "operand": true}
+		]
+	}
+]
