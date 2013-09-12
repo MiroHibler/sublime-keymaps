@@ -1,20 +1,22 @@
-# Sublime Text Keymaps Cheat Sheet
+# Sublime Text 2/3 Keymaps Cheat Sheet
+
+## Now ST3 compatible!
 
 Inspired by [KeymapViewer](https://github.com/wwwjfy/KeymapViewer), this plugin for Sublime Text editor shows all enabled keymaps in a searchable color-coded list.
 
-User can select an entry which will open corresponding `.sublime-keymap` file and select the keymap for eventual editing.
+User can select an entry which will open corresponding `.sublime-keymap` file and select the keymap for editing.
 
 Here's an example of possible output (OS X, truncated):
+```
+                             Clipboard History (6)                              
 
-     Case Conversion (7)
-        [ ⌃ ⌥ C ], [ ⌃ ⌥ S ]: Convert Case: snake_case
-        [ ⌃ ⌥ C ], [ ⌃ ⌥ C ]: Convert Case: camelCase
-        [ ⌃ ⌥ C ], [ ⌃ ⌥ P ]: Convert Case: PascalCase
-        [ ⌃ ⌥ C ], [ ⌃ ⌥ D ]: Convert Case: dot.case
-        [ ⌃ ⌥ C ], [ ⌃ ⌥ H ]: Convert Case: dash-case
-        [ ⌃ ⌥ C ], [ ⌃ ⌥ W ]: Convert Case: separate␣words
-        [ ⌃ ⌥ C ], [ ⌃ ⌥ / ]: Convert Case: separate/with/slash
-
+                                 [ ⌘ C ]: clipboard_copy
+                                 [ ⌘ X ]: clipboard_copy
+                            [ ⌘ ⌃ ⌥ V ]: Clipboard History
+                            [ ⌘ ⌃ ⌥ D ]: clipboard_clear_history
+                              [ ⌘ ⇧ V ]: clipboard_paste_previous
+                            [ ⌘ ⇧ ⌥ V ]: clipboard_paste_next
+```
 
 ## Features
 
@@ -44,6 +46,8 @@ Use these commands to browse the Cheat Sheet:
 
 <kbd>⌃</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd>+<kbd>ENTER</kbd> / <kbd>CTRL</kbd>+<kbd>ALT</kbd>+<kbd>SHIFT</kbd>+<kbd>ENTER</kbd>: **Open Keymap File For Edit**
 
+- or double-click _previously selected_ line while holding <kbd>⌃</kbd>+<kbd>⌥</kbd>+<kbd>⇧</kbd> / <kbd>CTRL</kbd>+<kbd>ALT</kbd>+<kbd>SHIFT</kbd>
+
 ## How to install
 
 *Warning:* If you experience problems or editor crashes please [file an issue](https://github.com/MiroHibler/sublime-keymaps/issues).
@@ -60,14 +64,23 @@ Manually:
 
 ## Options
 
-Mac users can opt for a nice simbols instead of text for keys.
+~~Mac~~ ALL users can now opt for pretty simbols instead of text for keys.
 
-Go to `Sublime Text 2` > `Preferences` > `Settings - User` and add this to the file:
+Go to `Preferences` > `Settings - User` and add this to the file:
 
-`"keymaps": { "show_osx_keys": true }`
+`~~"keymaps": { "show_osx_keys": true }~~`
+
+`"keymaps": { "show_pretty_keys": true }`
 
 
 ## Changelog
+
+### v1.1.0
+
+* Sublime Text 3 compatibility
+* Cleaned up and center-aligned listing
+* Cross-platform pretty simbols instead of text for keys (optional)
+* Bug fixes
 
 ### v1.0.0
 
@@ -75,6 +88,6 @@ Go to `Sublime Text 2` > `Preferences` > `Settings - User` and add this to the f
 
 ## Copyright and license
 
-Copyright © 2013 [Miroslav Hibler](http://miro.hibler.me) 
+Copyright © 2013 @[MiroHibler](http://twitter.com/MiroHibler) 
 
 Licensed under the [**MIT**](./LICENSE.txt) license.

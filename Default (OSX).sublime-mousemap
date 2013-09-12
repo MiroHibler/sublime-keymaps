@@ -2,7 +2,7 @@
     {
         "button": "button1",
         "count": 2,
-        "modifiers": ["alt"],
+        "modifiers": ["ctrl", "alt", "shift"],
         "command": "mouse_goto_keymap"
     }
 ]

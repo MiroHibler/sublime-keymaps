@@ -1,0 +1,37 @@
+
+
+New features in Keymaps v1.1.0:
+
+
+Keymaps is now compatible with Sublime Text 3!
+==============================================
+
+New centered list layout (example: OS X)
+========================================
+
+                             Clipboard History (6)                              
+
+                                 [ ⌘ C ]: clipboard_copy
+                                 [ ⌘ X ]: clipboard_copy
+                             [ ⌘ ⌃ ⌥ V ]: Clipboard History
+                             [ ⌘ ⌃ ⌥ D ]: clipboard_clear_history
+                               [ ⌘ ⇧ V ]: clipboard_paste_previous
+                             [ ⌘ ⇧ ⌥ V ]: clipboard_paste_next
+
+
+ALL users can now opt for pretty simbols instead of text for keys
+=================================================================
+
+    NOTE: Options parameter "show_osx_keys" has been replaced with "show_pretty_keys"
+		  to enable cross-platform functionality!
+
+Go to Preferences > Settings - User, and add this to the file:
+
+"keymaps": { "show_pretty_keys": true }
+
+Enjoy!
+
+
+---------------------------------
+Follow me on Twitter: @MiroHibler
+---------------------------------

@@ -9,15 +9,16 @@ from itertools import groupby
 from datetime import datetime
 from collections import namedtuple
 
+ST2 = sublime.version() < '3000'
+
 MY_NAME = 'Keymaps'
+LINE_SIZE = 80
 
 DEBUG = True
 
-GLOBAL_SETTINGS = sublime.load_settings("Preferences.sublime-settings")
-
 DEFAULT_SETTINGS = {
 	'keymaps_title': MY_NAME + ' Cheat Sheet',
-	'show_osx_keys': False	# Let's give some love to Winux guys ;)
+	'show_pretty_keys': False	# Let's give some love to Winux guys too ;)
 }
 
 platforms = {'linux': 'Linux', 'osx': 'OSX', 'windows': 'Windows'}
@@ -59,7 +60,7 @@ def find_keymap(view, data):
 
 def find_km(new_view, keymap):
 	new_view.window().run_command("show_panel", {"panel": "find"})
-	new_view.window().run_command("insert", {"characters": keymap})
+	new_view.window().run_command("insert", {"characters": '"' + keymap + '"'})
 
 
 def do_when(conditional, callback, *args, **kwargs):
@@ -74,6 +75,21 @@ class Settings(dict):
 		settings = DEFAULT_SETTINGS.copy()
 		settings.update(user_settings)
 		super(Settings, self).__init__(settings)
+
+
+class ConcatJSONDecoder(json.JSONDecoder):
+
+	def decode(self, s, _w=WHITESPACE.match):
+		s_len = len(s)
+		bs = s.decode('utf-8', 'ignore')
+
+		objs = []
+		end = 0
+		while end != s_len:
+			obj, end = self.raw_decode(bs, idx=_w(bs, end).end())
+			end = _w(bs, end).end()
+			objs.append(obj)
+		return objs
 
 
 class KeymapsCommand(sublime_plugin.TextCommand):
@@ -93,7 +109,8 @@ class KeymapsCommand(sublime_plugin.TextCommand):
 class KeymapsExtractor(object):
 
 	def __init__(self, settings, keymap_counter):
-		self.ignored = GLOBAL_SETTINGS.get("ignored_packages", [])
+		self.global_settings = sublime.load_settings("Preferences.sublime-settings")
+		self.ignored = self.global_settings.get("ignored_packages", [])
 		self.settings = settings
 		self.keymap_counter = keymap_counter
 		self.log = logging.getLogger(MY_NAME + '.extractor')
@@ -101,9 +118,9 @@ class KeymapsExtractor(object):
 
 	def removeComments(self, string):
 		# remove all occurance streamed comments (/* COMMENT */) from string
-		string = re.sub(re.compile("/\*.*?\*/",re.DOTALL ) ,"" ,string)
+		string = re.sub(re.compile(b"//.*?\n"), "", string)
 		# remove all occurance singleline comments (// COMMENT\n ) from string
-		string = re.sub(re.compile("//.*?\n" ) ,"" ,string)
+		string = re.sub(re.compile(b"/\*.*?\*/", re.DOTALL), "", string)
 		return string
 
 
@@ -228,9 +245,14 @@ class KeymapsRenderer(object):
 
 	@property
 	def header(self):
-		hr = u'+ {0} +'.format('-' * 76)
-		hr_ = u'{hr}\n| ' + MY_NAME + ' @ {0:<' + str(73 - MY_NAME.__len__()) + '} |\n| {1:<76} |\n{hr}\n'
-		return hr_.format(datetime.now().strftime('%A %d %B %Y %H:%M').decode("utf-8"),
+		hr = u'+ {0} +'.format('-' * (LINE_SIZE - 4))
+		hr_ = u'{hr}\n| ' + MY_NAME + ' @ {0:<' + str(LINE_SIZE - 7 - MY_NAME.__len__()) + '} |\n| {1:<76} |\n{hr}\n'
+
+		if self.settings['show_pretty_keys']:
+			if sublime.platform() != 'osx':
+				hr_ = hr_ + u'\n' + u'⌃ - CTRL, ⎇ - ALT, ⇧ - SHIFT'.center(LINE_SIZE) + u'\n'
+
+		return hr_.format(datetime.now().strftime('%A %d %B %Y %H:%M'),
 			u'{0} keymaps found'.format(self.keymap_counter),
 			hr=hr)
 
@@ -256,12 +278,16 @@ class KeymapsRenderer(object):
 		for message_type, matches in groupby(packages, key=key_func):
 			matches = list(matches)
 			if matches:
-				yield ('header', u'\n {0} ({1})'.format(message_type.decode('utf8', 'ignore'), len(matches)), {})
+				yield ('header', u'{0} ({1})'.format(message_type, len(matches)), {})
+
 				for idx, m in enumerate(matches, 1):
-					keys = ' ], [ '.join(m['keys']).decode('utf8', 'ignore').upper().replace('+', ' ')
-					if sublime.platform() == 'osx' and self.settings['show_osx_keys']:
-						keys = keys.replace('CTRL', u'⌃').replace('ALT', u'⌥').replace('SUPER', u'⌘').replace('SHIFT', u'⇧')
-					line = u"\t{keys}: {caption}".format(keys='[ '+keys+' ]', caption=m['caption'])
+					keys = '[ ' + ' ], [ '.join(m['keys']).upper().replace('+', ' ') + ' ]'
+					if self.settings['show_pretty_keys']:
+						if sublime.platform() == 'osx':
+							keys = keys.replace('CTRL', u'⌃').replace('ALT', u'⌥').replace('SUPER', u'⌘').replace('SHIFT', u'⇧')
+						else:
+							keys = keys.replace('CTRL', u'⌃').replace('ALT', u'⎇').replace('SHIFT', u'⇧')
+					line = u"{0}: {1}".format(keys.rjust(LINE_SIZE // 2), m['caption'])
 					yield ('keymap', line, m)
 
 
@@ -269,33 +295,57 @@ class KeymapsRenderer(object):
 		"""This blocks the main thread, so make it quick"""
 		## Header
 		keymaps_view = self.view
-		edit = keymaps_view.begin_edit()
-		keymaps_view.erase(edit, sublime.Region(0, keymaps_view.size()))
-		keymaps_view.insert(edit, keymaps_view.size(), self.header)
-		keymaps_view.end_edit(edit)
+		## run_command('append') doesn't work well in ST2(?)
+		if ST2:
+			edit = keymaps_view.begin_edit()
+			keymaps_view.erase(edit, sublime.Region(0, keymaps_view.size()))
+			keymaps_view.insert(edit, keymaps_view.size(), self.header)
+			keymaps_view.end_edit(edit)
+		else: # ST3
+			keymaps_view.run_command("select_all")
+			keymaps_view.run_command("right_delete")
+			keymaps_view.run_command('append', {'characters':self.header})
 
 		## Region : match_dicts
 		regions = {}
 
-		## Result sections
+		## Keymap sections
 		for linetype, line, data in formatted_keymaps:
-			edit = keymaps_view.begin_edit()
 			insert_point = keymaps_view.size()
-			keymaps_view.insert(edit, insert_point, line)
-			if linetype == 'keymap':
-				rgn = sublime.Region(insert_point, keymaps_view.size())
-				regions[rgn] = data
-			keymaps_view.insert(edit, keymaps_view.size(), u'\n')
-			keymaps_view.end_edit(edit)
+			if ST2:
+				edit = keymaps_view.begin_edit()
+				if linetype == 'keymap':
+					insert_space = insert_point
+					line_ = line.lstrip()
+					keymaps_view.insert(edit, insert_space, u'{0}'.format(' ' * (len(line)-len(line_))))
+					insert_point = insert_space + (keymaps_view.size() - insert_space)
+					keymaps_view.insert(edit, insert_point, line_)
+					rgn = sublime.Region(insert_point, keymaps_view.size())
+					regions[(rgn.a, rgn.b)] = (rgn, data)
+				else: # 'header'
+					keymaps_view.insert(edit, insert_point, u'\n\n' + line.center(LINE_SIZE) + u'\n')
+				keymaps_view.insert(edit, keymaps_view.size(), u'\n')
+				keymaps_view.end_edit(edit)
+			else: # ST3
+				if linetype == 'keymap':
+					insert_space = insert_point
+					line_ = line.lstrip()
+					keymaps_view.run_command('append', {'characters':u'{0}'.format(' ' * (len(line)-len(line_)))})
+					insert_point = insert_space + (keymaps_view.size() - insert_space)
+					keymaps_view.run_command('append', {'characters':line_})
+					rgn = sublime.Region(insert_point, keymaps_view.size())
+					regions[(rgn.a, rgn.b)] = (rgn, data)
+				else: # 'header'
+					keymaps_view.run_command('append', {'characters':u'\n\n' + line.center(LINE_SIZE) + u'\n'})
+				keymaps_view.run_command('append', {'characters':u'\n'})
 
-
-		keymaps_view.add_regions('keymaps', regions.keys(), '')
+			keymaps_view.add_regions('keymaps', [v[0] for k, v in regions.items()], '')
 
 		## Store {Region : data} map in settings
 		## TODO: Abstract this out to a storage class Storage.get(region) ==> data dict
 		## Region() cannot be stored in settings, so convert to a primitive type
 		# d_ = regions
-		d_ = dict(('{0},{1}'.format(k.a, k.b), v) for k, v in regions.iteritems())
+		d_ = dict(('{0},{1}'.format(k[0], k[1]), v[1]) for k, v in regions.items())
 		keymaps_view.settings().set('keymap_regions', d_)
 
 		## Set syntax and settings
@@ -359,110 +409,6 @@ class ThreadProgress(object):
 		sublime.set_timeout(lambda: self.run(i), 100)
 
 
-class NavigateKeymaps(sublime_plugin.TextCommand):
-	DIRECTION = {'forward': 1, 'backward': -1}
-	STARTING_POINT = {'forward': -1, 'backward': 0}
-
-	def __init__(self, view):
-		super(NavigateKeymaps, self).__init__(view)
-
-
-	def run(self, edit, direction):
-		view = self.view
-		settings = view.settings()
-		keymaps = self.view.get_regions('keymaps')
-		if not keymaps:
-			sublime.status_message('No keymaps to navigate')
-			return
-
-		##NOTE: numbers stored in settings are coerced to floats or longs
-		selection = int(settings.get('selected_keymap', self.STARTING_POINT[direction]))
-		selection = selection + self.DIRECTION[direction]
-		try:
-			target = keymaps[selection]
-		except IndexError:
-			target = keymaps[0]
-			selection = 0
-
-		settings.set('selected_keymap', selection)
-		## Create a new region for highlighting
-		target = target.cover(target)
-		view.add_regions('selection', [target], 'selected', 'dot')
-		view.show(target)
-
-
-class ClearSelection(sublime_plugin.TextCommand):
-	def run(self, edit):
-		self.view.erase_regions('selection')
-		self.view.settings().erase('selected_keymap')
-
-
-class GotoKeymap(sublime_plugin.TextCommand):
-
-	def __init__(self, *args):
-		self.log = logging.getLogger(MY_NAME + '.nav')
-		super(GotoKeymap, self).__init__(*args)
-
-
-	def run(self, edit):
-		## Get the idx of selected keymap region
-		selection = int(self.view.settings().get('selected_keymap', -1))
-		## Get the region
-		selected_region = self.view.get_regions('keymaps')[selection]
-		## Convert region to key used in keymaps_regions (this is tedious, but 
-		##	there is no other way to store regions with associated data)
-		data = self.view.settings().get('keymap_regions')['{0},{1}'.format(selected_region.a, selected_region.b)]
-		self.log.debug(u'Goto keymap at {package}'.format(**data))
-		## Open file for edit
-		find_keymap(self.view, data)
-
-
-class MouseGotoKeymap(sublime_plugin.TextCommand):
-
-	def __init__(self, *args):
-		self.log = logging.getLogger(MY_NAME + '.nav')
-		super(MouseGotoKeymap, self).__init__(*args)
-
-
-	def highlight(self, region):
-		target = region.cover(region)
-		self.view.add_regions('selection', [target], 'selected', 'dot')
-		self.view.show(target)
-
-
-	def get_keymaps_region(self, pos):
-		line = self.view.line(pos)
-		return line
-
-
-	def run(self, edit):
-		if not self.view.settings().get('keymap_regions'):
-			return
-		## get selected line
-		pos = self.view.sel()[0].end()
-		print pos
-		keymap = self.get_keymaps_region(pos)
-		self.highlight(keymap)
-		data = self.view.settings().get('keymap_regions')['{0},{1}'.format(keymap.a, keymap.b)]
-		self.log.debug(u'Goto keymap at {package}'.format(**data))
-		## Open file for edit
-		find_keymap(self.view, data)
-
-
-class ConcatJSONDecoder(json.JSONDecoder):
-
-	def decode(self, s, _w=WHITESPACE.match):
-		s_len = len(s)
-
-		objs = []
-		end = 0
-		while end != s_len:
-			obj, end = self.raw_decode(s, idx=_w(s, end).end())
-			end = _w(s, end).end()
-			objs.append(obj)
-		return objs
-
-
 class KeymapScanCounter(object):
 	"""Thread-safe counter used to update the status bar"""
 	def __init__(self):
@@ -489,3 +435,104 @@ class KeymapScanCounter(object):
 	def reset(self):
 		with self.lock:
 			self.ct = 0
+
+
+class NavigateKeymaps(sublime_plugin.TextCommand):
+	DIRECTION = {'forward': 1, 'backward': -1}
+	STARTING_POINT = {'forward': -1, 'backward': 0}
+
+	def __init__(self, view):
+		super(NavigateKeymaps, self).__init__(view)
+
+
+	def run(self, edit, direction):
+		view = self.view
+		settings = view.settings()
+		keymaps = self.view.get_regions('keymaps')
+		if not keymaps:
+			sublime.status_message('No keymaps to navigate')
+			return
+
+		## NOTE: numbers stored in settings are coerced to floats or longs
+		selection = int(settings.get('selected_keymap', self.STARTING_POINT[direction]))
+		selection = selection + self.DIRECTION[direction]
+		try:
+			target = keymaps[selection]
+		except IndexError:
+			target = keymaps[0]
+			selection = 0
+
+		settings.set('selected_keymap', selection)
+		## Create a new region for highlighting
+		target = target.cover(target)
+		view.add_regions('selection', [target], 'selected', 'dot')
+		view.show(target)
+
+
+class ClearSelection(sublime_plugin.TextCommand):
+
+	def run(self, edit):
+		self.view.erase_regions('selection')
+		self.view.settings().erase('selected_keymap')
+
+
+class GotoKeymap(sublime_plugin.TextCommand):
+
+	def __init__(self, *args):
+		self.log = logging.getLogger(MY_NAME + '.nav')
+		super(GotoKeymap, self).__init__(*args)
+
+
+	def run(self, edit):
+		## Get the idx of selected keymap region
+		selection = int(self.view.settings().get('selected_keymap', -1))
+		## Get the region
+		selected_region = self.view.get_regions('keymaps')[selection]
+
+		## Convert region to key used in keymaps_regions (this is tedious, but 
+		##	there is no other way to store regions with associated data)
+		data = self.view.settings().get('keymap_regions')['{0},{1}'.format(selected_region.a, selected_region.b)]
+
+		self.log.debug(u'Goto keymap at {package}'.format(**data))
+		## Open file for edit
+		find_keymap(self.view, data)
+
+
+class MouseGotoKeymap(sublime_plugin.TextCommand):
+
+	def __init__(self, *args):
+		self.log = logging.getLogger(MY_NAME + '.nav')
+		super(MouseGotoKeymap, self).__init__(*args)
+
+
+	def highlight(self, region):
+		target = region.cover(region)
+		self.view.add_regions('selection', [target], 'selected', 'dot')
+		self.view.show(target)
+
+
+	def get_keymaps_region(self, pos):
+		line = self.view.line(pos)
+		keymap = self.view.substr(line)
+		begin = len(keymap) - len(keymap.lstrip())
+		return sublime.Region(line.a + begin, line.b)
+
+
+	def run(self, edit):
+		if not self.view.settings().get('keymap_regions'):
+			return
+		## get selected line
+		pos = self.view.sel()[0].end()
+		keymap = self.get_keymaps_region(pos)
+		if pos == 0 or keymap.empty():
+			sublime.error_message(MY_NAME + ': Select some line first!')
+			return
+		self.highlight(keymap)
+
+		## Region returned from mouse event is different(?) from the region of keyboard event,
+		## so we fix it by forcing region.b = region.a
+		data = self.view.settings().get('keymap_regions')['{0},{1}'.format(keymap.a, keymap.b)]
+
+		self.log.debug(u'Goto keymap at {package}'.format(**data))
+		## Open file for edit
+		find_keymap(self.view, data)
