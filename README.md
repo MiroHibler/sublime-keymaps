@@ -68,7 +68,7 @@ Manually:
 
 Go to `Preferences` > `Settings - User` and add this to the file:
 
-`~~"keymaps": { "show_osx_keys": true }~~`
+~~`"keymaps": { "show_osx_keys": true }`~~
 
 `"keymaps": { "show_pretty_keys": true }`
 
