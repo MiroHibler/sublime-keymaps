@@ -10,12 +10,12 @@ Here's an example of possible output (OS X, truncated):
 ```
                              Clipboard History (6)                              
 
-                                 [ ⌘ C ]: clipboard_copy
-                                 [ ⌘ X ]: clipboard_copy
+                                  [ ⌘ C ]: Clipboard Copy
+                                  [ ⌘ X ]: Clipboard Copy
                              [ ⌃ ⌥ ⌘ V ]: Clipboard History
-                             [ ⌃ ⌥ ⌘ D ]: clipboard_clear_history
-                               [ ⇧ ⌘ V ]: clipboard_paste_previous
-                             [ ⇧ ⌥ ⌘ V ]: clipboard_paste_next
+                             [ ⌃ ⌥ ⌘ D ]: Clipboard Clear History
+                               [ ⇧ ⌘ V ]: Clipboard Paste Previous
+                             [ ⇧ ⌥ ⌘ V ]: Clipboard Paste Next
 ```
 
 ## Features
