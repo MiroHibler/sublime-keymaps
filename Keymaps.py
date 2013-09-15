@@ -7,13 +7,13 @@ import functools
 import codecs, json, re, string
 from itertools import groupby
 from datetime import datetime
-from collections import namedtuple
 
 ST2 = sublime.version() < '3000'
 
-MY_NAME = 'Keymaps'
 LINE_SIZE = 80
 
+MY_NAME = 'Keymaps'
+VERSION = '1.2.0'
 DEBUG = True
 
 DEFAULT_SETTINGS = {
@@ -21,9 +21,40 @@ DEFAULT_SETTINGS = {
 	'show_pretty_keys': False	# Let's give some love to Winux guys too ;)
 }
 
-platforms = {'linux': 'Linux', 'osx': 'OSX', 'windows': 'Windows'}
+PLATFORMS = {'linux': 'Linux', 'osx': 'OSX', 'windows': 'Windows'}
 
-FILE_NAME = 1
+PRETTY_KEYS = { 'CTRL': u'\u2303',
+				'ALT': u'\u2387',
+				'OPTION': u'\u2387',
+				'SUPER': u'\u2318', 
+				'SHIFT': u'\u21E7',
+				'FORWARD_SLASH': u'/',
+				'BACKWARD_SLASH': u'\\',
+				'ENTER': u'\u23CE',
+				'LEFT': u'\u2190',
+				'UP': u'\u2191',
+				'RIGHT': u'\u2192',
+				'DOWN': u'\u2193',
+				'TAB': u'\u21E5',
+				'SPACE': u'\u2423',
+				'INSERT': u'\u2380',
+				'BACKSPACE': u'\u232B',
+				'DELETE': u'\u2326',
+				'CLEAR': u'\u2327',
+				'ESCAPE': u'\u238B',
+				'HOME': u'\u2353',
+				'END': u'\u234C',
+				'PAGEUP': u'\u235E',
+				'PAGEDOWN': u'\u2357',
+				'BREAK': u'\u2386',
+				'BACKQUOTE': u'\u0060',
+				'PLUS': u'+',
+				'EQUALS': u'=',
+				'MINUS': u'-'
+			 }
+if sublime.platform() == 'osx':
+	PRETTY_KEYS['ALT'] = u'\u2325'
+	PRETTY_KEYS['OPTION'] = u'\u2325'
 
 #shameless copy paste from json/decoder.py
 FLAGS = re.VERBOSE | re.MULTILINE | re.DOTALL
@@ -54,8 +85,22 @@ if DEBUG:
 
 
 def find_keymap(view, data):
-	new_view = view.window().open_file(os.path.join(sublime.packages_path(), data['package'], 'Default (' + platforms[sublime.platform()] + ').sublime-keymap'))
-	do_when(lambda: not new_view.is_loading(), lambda: find_km(new_view, data['keys'][len(data['keys'])-1]))
+	path = os.path.join(sublime.packages_path(), data['package'], 'Default (' + PLATFORMS[sublime.platform()] + ').sublime-keymap')
+	if not os.path.isfile(path):
+		em = MY_NAME + ':\n\nIt seems that this keymap is defined either in global keymap file\n\n'
+		em = em + '(\'/Packages/Default/Default (' + PLATFORMS[sublime.platform()] + ').sublime-keymap\')\n\n'
+		em = em + 'or in package\'s default keymap file\n\n'
+		em = em + '(/Packages/' + data['package'] + '/Default (' + PLATFORMS[sublime.platform()] + ').sublime-keymap\')!\n\n'
+		em = em + 'Would you like to open User\'s keymap file\n\n'
+		em = em + '(/Packages/User/Default (' + PLATFORMS[sublime.platform()] + ').sublime-keymap\')\n\n'
+		em = em + 'to create/edit this keymap?'
+		answer = sublime.ok_cancel_dialog(em, 'Yes, let\'s do that...')
+		if answer:
+			path = os.path.join(sublime.packages_path(), 'User', 'Default (' + PLATFORMS[sublime.platform()] + ').sublime-keymap')
+			new_view = view.window().open_file(path)
+	else:
+		new_view = view.window().open_file(path)
+		do_when(lambda: not new_view.is_loading(), lambda: find_km(new_view, data['keys'][len(data['keys'])-1]))
 
 
 def find_km(new_view, keymap):
@@ -81,7 +126,8 @@ class ConcatJSONDecoder(json.JSONDecoder):
 
 	def decode(self, s, _w=WHITESPACE.match):
 		s_len = len(s)
-		bs = s.decode('utf-8', 'ignore')
+		# bs = s.decode('utf-8', 'replace')
+		bs = s
 
 		objs = []
 		end = 0
@@ -92,27 +138,49 @@ class ConcatJSONDecoder(json.JSONDecoder):
 		return objs
 
 
-class KeymapsCommand(sublime_plugin.TextCommand):
+class TestKeymapsCommand(sublime_plugin.TextCommand):
 
 	def run(self, edit):
 		window = self.view.window()
 		settings = Settings(self.view.settings().get('keymaps', {}))
 
+		default_packages = ['Default']
+		user_packages = ['User']
+		# default_packages = []
+		global_settings = sublime.load_settings("Preferences.sublime-settings")
+		ignored_packages = global_settings.get("ignored_packages", [])
+		package_control_settings = sublime.load_settings("Package Control.sublime-settings")
+		installed_packages = package_control_settings.get("installed_packages", [])
+		if len(installed_packages) == 0:
+			includes = ('.sublime-package')
+			os_packages = []
+			for (root, dirs, files) in os.walk(sublime.installed_packages_path()):
+				for file in files:
+					if file.endswith(includes):
+						os_packages.append(file.replace(includes, ''))
+			for (root, dirs, files) in os.walk(sublime.packages_path()):
+				for dir in dirs:
+					os_packages.append(dir)
+				break	# just the "top" level
+			installed_packages = []
+			[installed_packages.append(package) for package in os_packages if package not in installed_packages]
+
+		diff = lambda l1,l2: [x for x in l1 if x not in l2]
+		active_packages = diff( default_packages + installed_packages + user_packages, ignored_packages)
 		keymap_counter = KeymapScanCounter()
-		extractor = KeymapsExtractor(settings, keymap_counter)
+		extractor = KeymapsExtractor(settings, keymap_counter, active_packages)
 		renderer = KeymapsRenderer(settings, window, keymap_counter)
 		worker_thread = WorkerThread(extractor, renderer)
 		worker_thread.start()
-		ThreadProgress(worker_thread, 'Finding ' + MY_NAME, 'Done.', keymap_counter)
+		ThreadProgress(worker_thread, 'Searching ' + MY_NAME, 'Done.', keymap_counter)
 
 
 class KeymapsExtractor(object):
 
-	def __init__(self, settings, keymap_counter):
-		self.global_settings = sublime.load_settings("Preferences.sublime-settings")
-		self.ignored = self.global_settings.get("ignored_packages", [])
+	def __init__(self, settings, keymap_counter, active_packages):
 		self.settings = settings
 		self.keymap_counter = keymap_counter
+		self.active_packages = active_packages
 		self.log = logging.getLogger(MY_NAME + '.extractor')
 
 
@@ -124,95 +192,98 @@ class KeymapsExtractor(object):
 		return string
 
 
-	def parseJSON(self, path):
-		parsedJSON = ''
-		if not os.path.isfile(path):
-			return parsedJSON
-		with codecs.open(path) as f:
-			content = self.removeComments(f.read())
-		if f is not None:
-			f.close()
-		try:
-			parsedJSON = json.loads(content, cls=ConcatJSONDecoder)
-		except (ValueError):
-			return ''
-		return parsedJSON[0]
+	def parseJSON(self, package, name, ext):
+		if ST2:
+			path = os.path.join(sublime.packages_path(), package, name + '.' + ext)
+			if not os.path.isfile(path):
+				path = os.path.join(sublime.packages_path(), package, 'Default.' + ext)
+				if not os.path.isfile(path):
+					return None
+				return None
+			with codecs.open(path) as f:
+				content = self.removeComments(f.read())
+			if f is not None:
+				f.close()
+			try:
+				parsedJSON = json.loads(content, cls=ConcatJSONDecoder)
+			except (ValueError):
+				return None
+			return parsedJSON[0]
+		else:
+			try:
+				resource = sublime.load_resource('Packages/' + package + '/' + name + '.' + ext)
+			except (IOError):
+				try:
+					resource = sublime.load_resource('Packages/' + package + '/Default.' + ext)
+				except (IOError):
+					return None
+				return None
+			return sublime.decode_value(resource)
 
 
 	def getCaption(self, commands, keys):
-		for dict in commands:
-			if dict['command'] != keys['command']:
-				continue
-			if not 'subcommand' in keys:
-				return dict['caption']
-			if not 'args' in dict:
-				continue
-			args = dict['args']
-			if not 'command' in args:
-				continue
-			if not args['command'] == keys['subcommand']:
-				continue
-			return dict['caption']
+		if commands:
+			for dict in commands:
+				if 'command' in dict:
+					if dict['command'] != keys['command']:
+						continue
+					if not 'subcommand' in keys:
+						return dict['caption']
+					if not 'args' in dict:
+						continue
+					args = dict['args']
+					if not 'command' in args:
+						continue
+					if not args['command'] == keys['subcommand']:
+						continue
+				else:
+					if 'caption' in dict:
+						return dict['caption']
+				return ''
 		return ''
 
 
 	def getCaptions(self, packages):
-		ppath = sublime.packages_path()
-		cxt = 'Default.sublime-commands'
 		for package in packages:
-			if not 'keymaps' in package:
-				continue
+			commands = self.parseJSON(package['package'], 'Default', 'sublime-commands')
 			for keymap in package['keymaps']:
 				if not 'keys' in keymap:
 					continue
-				commands = self.parseJSON(os.path.join(ppath, package['package'], cxt))
-				if not isinstance(commands, list):
-					continue
-
 				caption = self.getCaption(commands, keymap)
 				if caption == '':
-					continue
+					caption = keymap['command'].replace('_', ' ').title()
 				keymap['caption'] = caption
 
 
 	def getKeymaps(self):
 		self.packages = []
-		kxt = ['Default (' + platforms[sublime.platform()] + ').sublime-keymap']
-		for root, dirs, files in os.walk(sublime.packages_path()):
-			self.package = {}
-			for file in files:
-				if not file in kxt:
-					continue
-				package = os.path.split(root)[FILE_NAME]
-				if package in self.ignored:
-					continue
-				keymaps = self.parseJSON(os.path.join(root, file))
-				if not isinstance(keymaps, list):
-					continue
+		for package in self.active_packages:
+			keymaps = self.parseJSON(package, 'Default (' + PLATFORMS[sublime.platform()] + ')', 'sublime-keymap')
 
+			if keymaps is not None:
 				kmaps = []
 				for keymap in keymaps:
 					item = {}
 					keys = keymap.get('keys')
 					if not keys:
 						continue
+					item['keys'] = []
+					for key_map in keys:
+						km = key_map.replace(u' ', u'').upper().split('+')
+						item['keys'].append(km)
 					command = keymap.get('command')
 					if not command:
 						continue
-					item = {
-						'keys': keys,
-						'command': command
-					}
+					item['command'] = command
 					args = keymap.get('args')
 					if args:
 						if 'command' in args:
 							item['subcommand'] = args['command']
+					item['package'] = package
 					kmaps.append(item)
-				self.package = { 'package': package, 'keymaps': kmaps }
-			if not self.package:
-				continue
-			self.packages.append(self.package)
-			self.keymap_counter.increment()
+				if len(kmaps) > 0:
+					self.packages.append({ 'package': package, 'keymaps': kmaps})
+					self.keymap_counter.increment()
 		return self.packages
 
 
@@ -221,14 +292,10 @@ class KeymapsExtractor(object):
 		keyMaps = self.getKeymaps()
 		if keyMaps:
 			self.getCaptions(keyMaps)
-			kxt = ['Default (' + platforms[sublime.platform()] + ').sublime-keymap']
 			for keyMap in keyMaps:
 				for keys in keyMap['keymaps']:
 					self.keymap_counter.increment()
-					caption = keys['command']
-					if 'caption' in keys:
-						caption = keys['caption']
-					yield {'package': keyMap['package'], 'keys': keys['keys'], 'caption': caption}
+					yield {'package': keyMap['package'], 'keys': keys['keys'], 'caption': keys['caption']}
 
 
 class KeymapsRenderer(object):
@@ -246,11 +313,11 @@ class KeymapsRenderer(object):
 	@property
 	def header(self):
 		hr = u'+ {0} +'.format('-' * (LINE_SIZE - 4))
-		hr_ = u'{hr}\n| ' + MY_NAME + ' @ {0:<' + str(LINE_SIZE - 7 - MY_NAME.__len__()) + '} |\n| {1:<76} |\n{hr}\n'
+		hr_ = u'{hr}\n| ' + MY_NAME + ' v' + VERSION + ' @ {0:<' + str(LINE_SIZE - 9 - MY_NAME.__len__() - VERSION.__len__()) + '} |\n| {1:<76} |\n{hr}\n'
 
 		if self.settings['show_pretty_keys']:
 			if sublime.platform() != 'osx':
-				hr_ = hr_ + u'\n' + u'⌃ - CTRL, ⎇ - ALT, ⇧ - SHIFT'.center(LINE_SIZE) + u'\n'
+				hr_ = hr_ + '\n' + u'{0} - CTRL, {1} - ALT, {2} - SHIFT'.format(PRETTY_KEYS['CTRL'], PRETTY_KEYS['ALT'], PRETTY_KEYS['SHIFT']).center(LINE_SIZE) + u'\n'
 
 		return hr_.format(datetime.now().strftime('%A %d %B %Y %H:%M'),
 			u'{0} keymaps found'.format(self.keymap_counter),
@@ -272,7 +339,9 @@ class KeymapsRenderer(object):
 
 	def format(self, packages):
 		key_func = lambda m: m['package']
+		diff = lambda l1,l2: [x for x in l1 if x not in l2]
 		packages = sorted(packages, key=key_func)
+		tokens = ['CTRL', 'ALT', 'OPTION', 'SHIFT', 'SUPER']
 		myKeymaps = {}
 
 		for message_type, matches in groupby(packages, key=key_func):
@@ -281,13 +350,20 @@ class KeymapsRenderer(object):
 				yield ('header', u'{0} ({1})'.format(message_type, len(matches)), {})
 
 				for idx, m in enumerate(matches, 1):
-					keys = '[ ' + ' ], [ '.join(m['keys']).upper().replace('+', ' ') + ' ]'
+					key_tokens = m['keys']
+					keys = ''
+					for key_token in key_tokens:
+						keys = keys + '['
+						for token in tokens:
+							if token in key_token:
+								keys = keys + u' ' + token
+								key_token.remove(token)
+						keys = keys + ' ' + ''.join(key_token) + u' ]'
 					if self.settings['show_pretty_keys']:
-						if sublime.platform() == 'osx':
-							keys = keys.replace('CTRL', u'⌃').replace('ALT', u'⌥').replace('SUPER', u'⌘').replace('SHIFT', u'⇧')
-						else:
-							keys = keys.replace('CTRL', u'⌃').replace('ALT', u'⎇').replace('SHIFT', u'⇧')
-					line = u"{0}: {1}".format(keys.rjust(LINE_SIZE // 2), m['caption'])
+						d = PRETTY_KEYS
+						pattern = re.compile(r'\b(' + '|'.join(re.escape(key) for key in d.keys()) + r')\b')
+						keys = pattern.sub(lambda x: d[x.group()], keys)
+					line = u'{0}: {1}'.format(keys.rjust(LINE_SIZE // 2), m['caption'])
 					yield ('keymap', line, m)
 
 
@@ -525,7 +601,7 @@ class MouseGotoKeymap(sublime_plugin.TextCommand):
 		pos = self.view.sel()[0].end()
 		keymap = self.get_keymaps_region(pos)
 		if pos == 0 or keymap.empty():
-			sublime.error_message(MY_NAME + ': Select some line first!')
+			sublime.error_message(MY_NAME + ':\n\nSelect some line first!')
 			return
 		self.highlight(keymap)
 

@@ -1,0 +1,36 @@
+
+
+New features in Keymaps v1.2.0:
+
+
+Keymaps is still compatible with Sublime Text 3! ;)
+===================================================
+
+More pretty keys :) (example: OS X)
+===================================
+
+                               [ ⌃ ⌘ ↑ ]: Swap Line Up
+                               [ ⌃ ⌘ ↓ ]: Swap Line Down
+                                 [ ⌃ ⌫ ]: Delete Word
+                                 [ ⌃ ⌦ ]: Delete Word
+
+
+Utilizing new ST3 API
+=====================
+
+Using sublime.load_resource(name) and sublime.decode_value(string) instead of os.walk()
+to load active keymaps with graceful fall-back to os.walk() if needed.
+
+NOTE: there's a down-side to that approach - ST3 uses packages (.sublime-package) for
+plugin distribution, which are unpacked on demand. Therefore, there are no corresponding
+.sublime-keymap and .sublime-commands files in /Packages/<package name> directories thus
+preventing the keymap editing functionality. However, there's still a possibility to edit
+corresponding files in /Packages/User directory.
+
+
+Enjoy!
+
+
+---------------------------------
+Follow me on Twitter: @MiroHibler
+---------------------------------
