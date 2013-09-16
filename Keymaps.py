@@ -138,7 +138,7 @@ class ConcatJSONDecoder(json.JSONDecoder):
 		return objs
 
 
-class TestKeymapsCommand(sublime_plugin.TextCommand):
+class KeymapsCommand(sublime_plugin.TextCommand):
 
 	def run(self, edit):
 		window = self.view.window()
