@@ -70,6 +70,10 @@ Go to `Preferences` > `Settings - User` and add this to the file:
 
 ## Changelog
 
+### v1.2.1
+
+* Fixed bug in messages.json preventing plugin upgrade
+
 ### v1.2.0
 
 * Additional Sublime Text 3 compatibility
