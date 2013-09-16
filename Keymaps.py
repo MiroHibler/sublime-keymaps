@@ -13,7 +13,7 @@ ST2 = sublime.version() < '3000'
 LINE_SIZE = 80
 
 MY_NAME = 'Keymaps'
-VERSION = '1.2.0'
+VERSION = '1.2.3'
 DEBUG = True
 
 DEFAULT_SETTINGS = {

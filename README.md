@@ -70,6 +70,10 @@ Go to `Preferences` > `Settings - User` and add this to the file:
 
 ## Changelog
 
+### v1.2.3
+
+* Bumped internal version number
+
 ### v1.2.2
 
 * Fixed bug in Keymaps.py in v1.2.1 (and v1.2.0) preventing plugin running
