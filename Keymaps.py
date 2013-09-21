@@ -8,13 +8,14 @@ import codecs, json, re, string
 from itertools import groupby
 from datetime import datetime
 
+DEBUG = True
+
 ST2 = sublime.version() < '3000'
 
 LINE_SIZE = 80
 
 MY_NAME = 'Keymaps'
-VERSION = '1.2.3'
-DEBUG = True
+VERSION = '1.3.0'
 
 DEFAULT_SETTINGS = {
 	'keymaps_title': MY_NAME + ' Cheat Sheet',
@@ -23,35 +24,61 @@ DEFAULT_SETTINGS = {
 
 PLATFORMS = {'linux': 'Linux', 'osx': 'OSX', 'windows': 'Windows'}
 
-PRETTY_KEYS = { 'CTRL': u'\u2303',
-				'ALT': u'\u2387',
-				'OPTION': u'\u2387',
-				'SUPER': u'\u2318', 
-				'SHIFT': u'\u21E7',
-				'FORWARD_SLASH': u'/',
-				'BACKWARD_SLASH': u'\\',
-				'ENTER': u'\u23CE',
-				'LEFT': u'\u2190',
-				'UP': u'\u2191',
-				'RIGHT': u'\u2192',
-				'DOWN': u'\u2193',
-				'TAB': u'\u21E5',
-				'SPACE': u'\u2423',
-				'INSERT': u'\u2380',
-				'BACKSPACE': u'\u232B',
-				'DELETE': u'\u2326',
-				'CLEAR': u'\u2327',
-				'ESCAPE': u'\u238B',
-				'HOME': u'\u2353',
-				'END': u'\u234C',
-				'PAGEUP': u'\u235E',
-				'PAGEDOWN': u'\u2357',
-				'BREAK': u'\u2386',
-				'BACKQUOTE': u'\u0060',
-				'PLUS': u'+',
-				'EQUALS': u'=',
-				'MINUS': u'-'
-			 }
+# To properly sort modifier keys
+TOKENS = ['CTRL', 'ALT', 'OPTION', 'SHIFT', 'SUPER']
+# To properly sort F-keys
+FTOKENS = {
+	'F1': 'F01',
+	'F2': 'F02',
+	'F3': 'F03',
+	'F4': 'F04',
+	'F5': 'F05',
+	'F6': 'F06',
+	'F7': 'F07',
+	'F8': 'F08',
+	'F9': 'F09'
+}
+
+PRETTY_KEYS = {
+	'CTRL': u'\u2303',
+	'ALT': u'\u2387',
+	'OPTION': u'\u2387',
+	'SUPER': u'\u2318',
+	'SHIFT': u'\u21E7',
+	'FORWARD_SLASH': u'/',
+	'BACKWARD_SLASH': u'\\',
+	'ENTER': u'\u23CE',
+	'LEFT': u'\u2190',
+	'UP': u'\u2191',
+	'RIGHT': u'\u2192',
+	'DOWN': u'\u2193',
+	'TAB': u'\u21E5',
+	'SPACE': u'\u2423',
+	'INSERT': u'\u2380',
+	'BACKSPACE': u'\u232B',
+	'DELETE': u'\u2326',
+	'CLEAR': u'\u2327',
+	'ESCAPE': u'\u238B',
+	'HOME': u'\u2353',
+	'END': u'\u234C',
+	'PAGEUP': u'\u235E',
+	'PAGEDOWN': u'\u2357',
+	'BREAK': u'\u2386',
+	'BACKQUOTE': u'\u0060',
+	'PLUS': u'+',
+	'EQUALS': u'=',
+	'MINUS': u'-',
+	'F01': u'F1',
+	'F02': u'F2',
+	'F03': u'F3',
+	'F04': u'F4',
+	'F05': u'F5',
+	'F06': u'F6',
+	'F07': u'F7',
+	'F08': u'F8',
+	'F09': u'F9'
+}
+
 if sublime.platform() == 'osx':
 	PRETTY_KEYS['ALT'] = u'\u2325'
 	PRETTY_KEYS['OPTION'] = u'\u2325'
@@ -65,13 +92,13 @@ try:
 	from logging import NullHandler
 except ImportError:
 	class NullHandler(logging.Handler):
-	
+
 		def handle(self, record):
 			pass
-	
+
 		def emit(self, record):
 			pass
-	
+
 		def createLock(self):
 			self.lock = None
 
@@ -83,7 +110,9 @@ if DEBUG:
 	log.addHandler(logging.StreamHandler())
 	log.setLevel(logging.DEBUG)
 
-
+"""
+	Main stuff
+"""
 def find_keymap(view, data):
 	path = os.path.join(sublime.packages_path(), data['package'], 'Default (' + PLATFORMS[sublime.platform()] + ').sublime-keymap')
 	if not os.path.isfile(path):
@@ -103,15 +132,45 @@ def find_keymap(view, data):
 		do_when(lambda: not new_view.is_loading(), lambda: find_km(new_view, data['keys'][len(data['keys'])-1]))
 
 
-def find_km(new_view, keymap):
-	new_view.window().run_command("show_panel", {"panel": "find"})
-	new_view.window().run_command("insert", {"characters": '"' + keymap + '"'})
+def find_km(view, keys):
+	view.window().run_command("show_panel", {"panel": "find"})
+	view.window().run_command("insert", {"characters": '"' + '+'.join(keys).lower() + '"'})
 
 
 def do_when(conditional, callback, *args, **kwargs):
 	if conditional():
 		return callback(*args, **kwargs)
 	sublime.set_timeout(functools.partial(do_when, conditional, callback, *args, **kwargs), 50)
+
+
+def do(renderer, keymap_counter):
+	default_packages = ['Default']
+	user_packages = ['User']
+	global_settings = sublime.load_settings("Preferences.sublime-settings")
+	ignored_packages = global_settings.get("ignored_packages", [])
+	package_control_settings = sublime.load_settings("Package Control.sublime-settings")
+	installed_packages = package_control_settings.get("installed_packages", [])
+	if len(installed_packages) == 0:
+		includes = ('.sublime-package')
+		os_packages = []
+		for (root, dirs, files) in os.walk(sublime.installed_packages_path()):
+			for file in files:
+				if file.endswith(includes):
+					os_packages.append(file.replace(includes, ''))
+		for (root, dirs, files) in os.walk(sublime.packages_path()):
+			for dir in dirs:
+				os_packages.append(dir)
+			break	# just the top level
+		installed_packages = []
+		[installed_packages.append(package) for package in os_packages if package not in installed_packages]
+
+	diff = lambda l1,l2: [x for x in l1 if x not in l2]
+	active_packages = diff( default_packages + installed_packages + user_packages, ignored_packages)
+
+	keymapsExtractor = KeymapsExtractor(active_packages, keymap_counter)
+	worker_thread = WorkerThread(keymapsExtractor, renderer)
+	worker_thread.start()
+	ThreadProgress(worker_thread, 'Searching ' + MY_NAME, 'Done.', keymap_counter)
 
 
 class Settings(dict):
@@ -126,7 +185,6 @@ class ConcatJSONDecoder(json.JSONDecoder):
 
 	def decode(self, s, _w=WHITESPACE.match):
 		s_len = len(s)
-		# bs = s.decode('utf-8', 'replace')
 		bs = s
 
 		objs = []
@@ -138,49 +196,29 @@ class ConcatJSONDecoder(json.JSONDecoder):
 		return objs
 
 
-class KeymapsCommand(sublime_plugin.TextCommand):
+class CheatSheetCommand(sublime_plugin.TextCommand):
 
 	def run(self, edit):
-		window = self.view.window()
 		settings = Settings(self.view.settings().get('keymaps', {}))
-
-		default_packages = ['Default']
-		user_packages = ['User']
-		# default_packages = []
-		global_settings = sublime.load_settings("Preferences.sublime-settings")
-		ignored_packages = global_settings.get("ignored_packages", [])
-		package_control_settings = sublime.load_settings("Package Control.sublime-settings")
-		installed_packages = package_control_settings.get("installed_packages", [])
-		if len(installed_packages) == 0:
-			includes = ('.sublime-package')
-			os_packages = []
-			for (root, dirs, files) in os.walk(sublime.installed_packages_path()):
-				for file in files:
-					if file.endswith(includes):
-						os_packages.append(file.replace(includes, ''))
-			for (root, dirs, files) in os.walk(sublime.packages_path()):
-				for dir in dirs:
-					os_packages.append(dir)
-				break	# just the "top" level
-			installed_packages = []
-			[installed_packages.append(package) for package in os_packages if package not in installed_packages]
-
-		diff = lambda l1,l2: [x for x in l1 if x not in l2]
-		active_packages = diff( default_packages + installed_packages + user_packages, ignored_packages)
 		keymap_counter = KeymapScanCounter()
-		extractor = KeymapsExtractor(settings, keymap_counter, active_packages)
-		renderer = KeymapsRenderer(settings, window, keymap_counter)
-		worker_thread = WorkerThread(extractor, renderer)
-		worker_thread.start()
-		ThreadProgress(worker_thread, 'Searching ' + MY_NAME, 'Done.', keymap_counter)
+		renderer = CheatSheetRenderer(settings, self.view.window(), keymap_counter)
+		do(renderer, keymap_counter)
+
+
+class FindKeymapCommand(sublime_plugin.TextCommand):
+
+	def run(self, edit):
+		settings = Settings(self.view.settings().get('keymaps', {}))
+		keymap_counter = KeymapScanCounter()
+		renderer = FindKeymapRenderer(settings, self.view.window(), keymap_counter)
+		do(renderer, keymap_counter)
 
 
 class KeymapsExtractor(object):
 
-	def __init__(self, settings, keymap_counter, active_packages):
-		self.settings = settings
-		self.keymap_counter = keymap_counter
+	def __init__(self, active_packages, keymap_counter):
 		self.active_packages = active_packages
+		self.keymap_counter = keymap_counter
 		self.log = logging.getLogger(MY_NAME + '.extractor')
 
 
@@ -256,14 +294,13 @@ class KeymapsExtractor(object):
 
 
 	def getKeymaps(self):
-		self.packages = []
+		packages = []
 		for package in self.active_packages:
 			keymaps = self.parseJSON(package, 'Default (' + PLATFORMS[sublime.platform()] + ')', 'sublime-keymap')
 
 			if keymaps is not None:
-				kmaps = []
 				for keymap in keymaps:
-					item = {}
+					item = {'package': package}
 					keys = keymap.get('keys')
 					if not keys:
 						continue
@@ -271,20 +308,81 @@ class KeymapsExtractor(object):
 					for key_map in keys:
 						km = key_map.replace(u' ', u'').upper().split('+')
 						item['keys'].append(km)
+					# Sort keys
+					skeys = []
+					for key_token in item['keys']:
+						ktoks = []
+						for token in TOKENS:
+							if token in key_token:
+								ktoks.append(u'' + token)
+								key_token.remove(token)
+						if key_token[0] in FTOKENS:
+							ktoks.append(FTOKENS[key_token[0]])
+						else:
+							ktoks.append(key_token[0])
+						skeys.append(ktoks)
+					item['keys'] = skeys
+					# Get Command
 					command = keymap.get('command')
 					if not command:
 						continue
 					item['command'] = command
+					# Get Args
 					args = keymap.get('args')
 					if args:
 						if 'command' in args:
 							item['subcommand'] = args['command']
-					item['package'] = package
-					kmaps.append(item)
-				if len(kmaps) > 0:
-					self.packages.append({ 'package': package, 'keymaps': kmaps})
-					self.keymap_counter.increment()
-		return self.packages
+						item['args'] = args
+					# Get Context
+					context = keymap.get('context')
+					if context:
+						item['context'] = []
+						for ctxt in context: 
+							if 'key' in ctxt:
+								item['context'].append(ctxt['key'])
+					packages.append(item)
+
+		# Merge keymaps in Order of Precedence (the way Sublime Text is doing it):
+		# 1. Load	Default keymaps (Packages/Default/*.sublime-keymap)
+		# 2. Merge	Packages keymaps (Packages/*/*.sublime-keymap)
+		# 3. Merge	User keymaps (Packages/User/*.sublime-keymap)
+		merged = []
+		key_func = lambda m: m['keys']
+		packages = sorted(packages, key=key_func)
+		for keymap, matches in groupby(packages, key=key_func):
+			matches = list(matches)
+			if matches:
+				if len(matches) > 1:
+					key_f = lambda m: m['command']
+					doubles = sorted(matches, key=key_f)
+					for command, clones in groupby(doubles, key=key_f):
+						clones = list(clones)
+						if len(clones) > 1:
+							unique = next((clone for clone in clones if clone['package'] == 'User'), None)
+							if not unique:
+								unique = next((clone for clone in clones if clone['package'] != 'Default'), None)
+								if not unique:
+									for unique in clones:
+										merged.append(unique)
+							else:
+								merged.append(unique)
+						else:
+							merged.append(clones[0])
+				else:
+					merged.append(matches[0])
+
+		packages = []
+		key_func = lambda m: m['package']
+		grouped = sorted(merged, key=key_func)
+		for pack, matches in groupby(grouped, key=key_func):
+			keymaps = list(matches)
+			if keymaps:
+				kmaps = []
+				for keymap in keymaps:
+					kmaps.append(keymap)
+			packages.append({ 'package': pack, 'keymaps': kmaps })
+
+		return packages
 
 
 	def extract(self):
@@ -294,11 +392,14 @@ class KeymapsExtractor(object):
 			self.getCaptions(keyMaps)
 			for keyMap in keyMaps:
 				for keys in keyMap['keymaps']:
+					args = keys.get('args')
+					if not args:
+						args = None
 					self.keymap_counter.increment()
-					yield {'package': keyMap['package'], 'keys': keys['keys'], 'caption': keys['caption']}
+					yield {'package': keyMap['package'], 'keys': keys['keys'], 'command': keys['command'], 'args': args, 'caption': keys['caption']}
 
 
-class KeymapsRenderer(object):
+class CheatSheetRenderer(object):
 
 	def __init__(self, settings, window, keymap_counter):
 		self.settings = settings
@@ -325,7 +426,7 @@ class KeymapsRenderer(object):
 
 	@property
 	def view(self):
-		existing_keymaps = [v for v in self.window.views() 
+		existing_keymaps = [v for v in self.window.views()
 							if v.name() == self.view_name and v.is_scratch()]
 		if existing_keymaps:
 			v = existing_keymaps[0]
@@ -339,26 +440,18 @@ class KeymapsRenderer(object):
 
 	def format(self, packages):
 		key_func = lambda m: m['package']
-		diff = lambda l1,l2: [x for x in l1 if x not in l2]
 		packages = sorted(packages, key=key_func)
-		tokens = ['CTRL', 'ALT', 'OPTION', 'SHIFT', 'SUPER']
 		myKeymaps = {}
 
-		for message_type, matches in groupby(packages, key=key_func):
-			matches = list(matches)
-			if matches:
-				yield ('header', u'{0} ({1})'.format(message_type, len(matches)), {})
+		for package, keymaps in groupby(packages, key=key_func):
+			keymaps = list(keymaps)
+			if keymaps:
+				yield ('header', u'{0} ({1})'.format(package, len(keymaps)), {})
 
-				for idx, m in enumerate(matches, 1):
-					key_tokens = m['keys']
+				for idx, m in enumerate(keymaps, 1):
 					keys = ''
-					for key_token in key_tokens:
-						keys = keys + '['
-						for token in tokens:
-							if token in key_token:
-								keys = keys + u' ' + token
-								key_token.remove(token)
-						keys = keys + ' ' + ''.join(key_token) + u' ]'
+					for key_token in m['keys']:
+						keys = keys + u'[ ' + ' '.join(key_token) + u' ]'
 					if self.settings['show_pretty_keys']:
 						d = PRETTY_KEYS
 						pattern = re.compile(r'\b(' + '|'.join(re.escape(key) for key in d.keys()) + r')\b')
@@ -367,7 +460,7 @@ class KeymapsRenderer(object):
 					yield ('keymap', line, m)
 
 
-	def render_to_view(self, formatted_keymaps):
+	def render(self, formatted_keymaps):
 		"""This blocks the main thread, so make it quick"""
 		## Header
 		keymaps_view = self.view
@@ -399,7 +492,8 @@ class KeymapsRenderer(object):
 					rgn = sublime.Region(insert_point, keymaps_view.size())
 					regions[(rgn.a, rgn.b)] = (rgn, data)
 				else: # 'header'
-					keymaps_view.insert(edit, insert_point, u'\n\n' + line.center(LINE_SIZE) + u'\n')
+					# TODO: Check if this .rstrip() is doing right
+					keymaps_view.insert(edit, insert_point, u'\n\n' + line.center(LINE_SIZE).rstrip() + u'\n')
 				keymaps_view.insert(edit, keymaps_view.size(), u'\n')
 				keymaps_view.end_edit(edit)
 			else: # ST3
@@ -433,6 +527,58 @@ class KeymapsRenderer(object):
 		self.window.focus_view(keymaps_view)
 
 
+class FindKeymapRenderer(object):
+
+	def __init__(self, settings, window, keymap_counter):
+		self.settings = settings
+		self.window = window
+		self.keymap_counter = keymap_counter
+
+
+	def format(self, packages):
+		key_func = lambda m: m['package']
+		packages = sorted(packages, key=key_func)
+		myKeymaps = {}
+
+		for package, matches in groupby(packages, key=key_func):
+			matches = list(matches)
+			if matches:
+
+				for m in matches:
+					keys = ''
+					for key_token in m['keys']:
+						keys = keys + u'[ ' + ' '.join(key_token) + u' ]'
+					if self.settings['show_pretty_keys']:
+						d = PRETTY_KEYS
+						pattern = re.compile(r'\b(' + '|'.join(re.escape(key) for key in d.keys()) + r')\b')
+						keys = pattern.sub(lambda x: d[x.group()], keys)
+					args = m.get('args')
+					if not args:
+						args = None
+					yield (package, keys, m['command'], args, m['caption'])
+
+
+	def render(self, keymaps):
+		self.keymaps = keymaps
+		window = sublime.active_window()
+		self.panel_items = []
+
+		## Keymap sections
+		for package, keys, command, args, caption in keymaps:
+			self.panel_items.append([caption, keys + u' (' + package + u')'])
+
+		# show_quick_panel(items, on_done, <flags>, <selected_index>, <on_highlighted>)
+		window.show_quick_panel(self.panel_items, self.runcommand, sublime.MONOSPACE_FONT)
+
+
+	def runcommand(self, idx):
+		if idx == -1: return
+		try:
+			self.window.run_command(self.keymaps[idx][2], self.keymaps[idx][3])
+		except Exception:
+			pass
+
+
 class WorkerThread(threading.Thread):
 
 	def __init__(self, extractor, renderer):
@@ -446,9 +592,9 @@ class WorkerThread(threading.Thread):
 		keymaps = self.extractor.extract()
 		rendered = list(self.renderer.format(keymaps))
 
-		## Render into new window in main thread
+		## Render in main thread
 		def render():
-			self.renderer.render_to_view(rendered)
+			self.renderer.render(rendered)
 
 		sublime.set_timeout(render, 10)
 
@@ -565,7 +711,7 @@ class GotoKeymap(sublime_plugin.TextCommand):
 		## Get the region
 		selected_region = self.view.get_regions('keymaps')[selection]
 
-		## Convert region to key used in keymaps_regions (this is tedious, but 
+		## Convert region to key used in keymaps_regions (this is tedious, but
 		##	there is no other way to store regions with associated data)
 		data = self.view.settings().get('keymap_regions')['{0},{1}'.format(selected_region.a, selected_region.b)]
 

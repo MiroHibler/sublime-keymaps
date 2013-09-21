@@ -1,52 +1,42 @@
-# Sublime Text Keymaps Cheat Sheet
+# Sublime Text Keymap Helper
 
-## ST3 compatible!
-
-Inspired by [KeymapViewer](https://github.com/wwwjfy/KeymapViewer), this plugin for Sublime Text editor shows all enabled keymaps in a searchable color-coded list.
-
-User can select an entry which will open corresponding `.sublime-keymap` file and select the keymap for editing.
-
-Here's an example of possible output (OS X, truncated):
-```
-                             Clipboard History (6)                              
-
-                                  [ ⌘ C ]: Clipboard Copy
-                                  [ ⌘ X ]: Clipboard Copy
-                             [ ⌃ ⌥ ⌘ V ]: Clipboard History
-                             [ ⌃ ⌥ ⌘ D ]: Clipboard Clear History
-                               [ ⇧ ⌘ V ]: Clipboard Paste Previous
-                             [ ⇧ ⌥ ⌘ V ]: Clipboard Paste Next
-```
+Plugin for Sublime Text 2/3 editor that enables searching for keymaps by function as well as showing all enabled keymaps in a searchable color-coded list - Cheat Sheet.
 
 ## Features
 
-- Shows Cheat Sheet (overview) of keymaps
-- Helps search for keymaps
-- Open the keymap file to edit chosen keymap
+* **NEW!** Search for keymaps by function
+* Shows searchable color-coded Cheat Sheet (overview) of keymaps
+* Open the keymap file to edit chosen keymap
 
 ## Usage
 
-- View -> Keymaps Cheat Sheet, or <kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>?</kbd> / <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>?</kbd>
+### Find a keymap for...
 
-Use these commands to browse the Cheat Sheet:
+* Invoke via <kbd>⌃</kbd><kbd>⌥</kbd><kbd>?</kbd> / <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>?</kbd> (menu: `Tools` -> `Keymaps` -> `Find a keymap for...`)
+* Start typing the function you need keymap for and - voilà!
+* Additionaly, hit <kbd>⏎</kbd> to execute it!
 
-<kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>N</kbd> / <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>⇧</kbd> <kbd>N</kbd>: **Navigate Forward**
+![Find a keymap for...](https://raw.github.com/MiroHibler/sublime-keymaps/master/images/quick_panel.gif)
 
-<kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>↓</kbd> / <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>⇧</kbd> <kbd>↓</kbd>: **Navigate Forward**
+### Cheat Sheet
 
-<kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>J</kbd> / <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>⇧</kbd> <kbd>J</kbd>: **Navigate Forward**
+* Invoke via <kbd>⌃</kbd><kbd>⌥</kbd><kbd>_</kbd> / <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>_</kbd> (menu: `Tools` -> `Keymaps` -> `Cheat Sheet`)
+* Use these commands to browse the Cheat Sheet and select an entry to open corresponding `.sublime-keymap` file and edit the keymap
 
-<kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>P</kbd> / <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>⇧</kbd> <kbd>P</kbd>: **Navigate Backward**
+<kbd>⌃</kbd><kbd>⌥</kbd><kbd>⇧</kbd><kbd>↓</kbd> / <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>⇧</kbd><kbd>↓</kbd>: **Navigate Forward**
 
-<kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>↑</kbd> / <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>⇧</kbd> <kbd>↑</kbd>: **Navigate Backward**
+<kbd>⌃</kbd><kbd>⌥</kbd><kbd>⇧</kbd><kbd>↑</kbd> / <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>⇧</kbd><kbd>↑</kbd>: **Navigate Backward**
 
-<kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>K</kbd> / <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>⇧</kbd> <kbd>K</kbd>: **Navigate Backward**
+<kbd>⌃</kbd><kbd>⌥</kbd><kbd>⇧</kbd><kbd>C</kbd> / <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>⇧</kbd><kbd>C</kbd>: **Clear Selection**
 
-<kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>C</kbd> / <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>⇧</kbd> <kbd>C</kbd>: **Clear Selection**
+<kbd>⌃</kbd><kbd>⌥</kbd><kbd>⇧</kbd><kbd>⏎</kbd> / <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>⇧</kbd><kbd>⏎</kbd>: **Open .sublime-keymap File For Editing**
 
-<kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>⏎</kbd> / <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>⇧</kbd> <kbd>⏎</kbd>: **Open Keymap File For Edit**
+or double-click _previously selected_ line while holding <kbd>⌃</kbd><kbd>⌥</kbd> / <kbd>Ctrl</kbd><kbd>Alt</kbd>
 
-- or double-click _previously selected_ line while holding <kbd>⌃</kbd> <kbd>⌥</kbd> <kbd>⇧</kbd> / <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>⇧</kbd>
+Here's an example of possible output (OS X, truncated):
+
+![Cheat Sheet](https://raw.github.com/MiroHibler/sublime-keymaps/master/images/cheat_sheet.png)
+
 
 ## How to install
 
@@ -61,7 +51,7 @@ With [Package Control](http://wbond.net/sublime_packages/package_control):
 
 ~~Mac~~ ALL users can now opt for pretty simbols instead of text for keys.
 
-Go to `Preferences` > `Settings - User` and add this to the file:
+Go to `Preferences` -> `Settings - User` and add this to the file:
 
 ~~`"keymaps": { "show_osx_keys": true }`~~
 
@@ -69,6 +59,13 @@ Go to `Preferences` > `Settings - User` and add this to the file:
 
 
 ## Changelog
+
+### v1.3.0
+
+* Search for keymaps by function
+* Simplified keymaps for Keymaps itself
+* Moved to Tools menu
+* Bug fixes (yes, I know - again :P )
 
 ### v1.2.3
 
@@ -99,8 +96,12 @@ Go to `Preferences` > `Settings - User` and add this to the file:
 
 * Initial release
 
+## Acknowledgments
+
+Inspired by [KeymapViewer](https://github.com/wwwjfy/KeymapViewer)
+
 ## Copyright and license
 
-Copyright © 2013 @[MiroHibler](http://twitter.com/MiroHibler) 
+Copyright © 2013 @[MiroHibler](http://twitter.com/MiroHibler)
 
 Licensed under the [**MIT**](./LICENSE.txt) license.

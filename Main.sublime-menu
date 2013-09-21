@@ -1,14 +1,23 @@
 [
 	{
-		"id": "view",
+		"id": "tools",
 		"children":
 		[
 			{
-				"caption": "Keymaps Cheat Sheet",
 				"id": "keymaps",
-				"command": "keymaps",
+				"caption": "Keymaps",
 				"children":
 				[
+					{
+						"id": "find_keymap",
+						"caption": "Find a keymap for...",
+						"command": "find_keymap"
+					},
+					{
+						"id": "cheat_sheet",
+						"caption": "Cheat Sheet",
+						"command": "cheat_sheet"
+					}
 				]
 			}
 		]

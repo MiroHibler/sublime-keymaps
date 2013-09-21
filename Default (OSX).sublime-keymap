@@ -1,15 +1,9 @@
 [
 	{
-		"keys": ["ctrl+alt+?"], "command": "keymaps"
+		"keys": ["ctrl+alt+?"], "command": "find_keymap"
 	},
 	{
-		"keys": ["ctrl+alt+shift+n"],
-		"command": "navigate_keymaps",
-		"context":
-		[
-			{"key": "setting.command_mode", "operand": true}
-		],
-		"args": {"direction": "forward"}
+		"keys": ["ctrl+alt+_"], "command": "cheat_sheet"
 	},
 	{
 		"keys": ["ctrl+alt+shift+down"],
@@ -21,34 +15,7 @@
 		"args": {"direction": "forward"}
 	},
 	{
-		"keys": ["ctrl+alt+shift+j"],
-		"command": "navigate_keymaps",
-		"context":
-		[
-			{"key": "setting.command_mode", "operand": true}
-		],
-		"args": {"direction": "forward"}
-	},
-	{
-		"keys": ["ctrl+alt+shift+p"],
-		"command": "navigate_keymaps",
-		"context":
-		[
-			{"key": "setting.command_mode", "operand": true}
-		],
-		"args": {"direction": "backward"}
-	},
-	{
 		"keys": ["ctrl+alt+shift+up"],
-		"command": "navigate_keymaps",
-		"context":
-		[
-			{"key": "setting.command_mode", "operand": true}
-		],
-		"args": {"direction": "backward"}
-	},
-	{
-		"keys": ["ctrl+alt+shift+k"],
 		"command": "navigate_keymaps",
 		"context":
 		[

@@ -1,0 +1,17 @@
+
+New features in Keymaps v1.3.0:
+
+
+- **NEW!** Search for keymaps by function
+- Simplified keymaps for Keymaps itself
+- Moved to Tools menu
+- Bug fixes (yes, I know - again :P )
+
+See more @ https://github.com/MiroHibler/sublime-keymaps
+
+Enjoy!
+
+
+---------------------------------
+Follow me on Twitter: @MiroHibler
+---------------------------------

@@ -1,7 +1,12 @@
 [
 	{
-		"id": "keymaps",
+		"id": "cheat_sheet",
 		"caption": "Keymaps: Cheat Sheet",
-		"command": "keymaps"
+		"command": "cheat_sheet"
+	},
+	{
+		"id": "find_keymap",
+		"caption": "Keymaps: Find a keymap for...",
+		"command": "find_keymap"
 	}
 ]
