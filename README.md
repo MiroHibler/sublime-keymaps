@@ -20,7 +20,7 @@ Plugin for Sublime Text 2/3 editor that enables searching for keymaps by functio
 
 ### Cheat Sheet
 
-* Invoke via <kbd>⌃</kbd><kbd>⌥</kbd><kbd>_</kbd> / <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>_</kbd> (menu: `Tools` -> `Keymaps` -> `Cheat Sheet`)
+* Invoke via <kbd>⌃</kbd><kbd>⌥</kbd><kbd>\_</kbd> / <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>\_</kbd> (menu: `Tools` -> `Keymaps` -> `Cheat Sheet`)
 * Use these commands to browse the Cheat Sheet and select an entry to open corresponding `.sublime-keymap` file and edit the keymap
 
 <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⇧</kbd><kbd>↓</kbd> / <kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>⇧</kbd><kbd>↓</kbd>: **Navigate Forward**
