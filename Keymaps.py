@@ -237,7 +237,6 @@ class KeymapsExtractor(object):
 				path = os.path.join(sublime.packages_path(), package, 'Default.' + ext)
 				if not os.path.isfile(path):
 					return None
-				return None
 			with codecs.open(path) as f:
 				content = self.removeComments(f.read())
 			if f is not None:
@@ -255,7 +254,6 @@ class KeymapsExtractor(object):
 					resource = sublime.load_resource('Packages/' + package + '/Default.' + ext)
 				except (IOError):
 					return None
-				return None
 			return sublime.decode_value(resource)
 
 
