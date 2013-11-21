@@ -15,7 +15,7 @@ ST2 = sublime.version() < '3000'
 LINE_SIZE = 80
 
 MY_NAME = 'Keymaps'
-VERSION = '1.3.0'
+VERSION = '1.3.1'
 
 DEFAULT_SETTINGS = {
 	'keymaps_title': MY_NAME + ' Cheat Sheet',
