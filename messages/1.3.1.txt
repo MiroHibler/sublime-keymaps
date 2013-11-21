@@ -1,0 +1,15 @@
+
+New features in Keymaps v1.3.1:
+
+
+- Bug fixes:
+  - fix for issue #9: parse Default.sublime-keymap file in packages
+
+See more @ https://github.com/MiroHibler/sublime-keymaps
+
+Enjoy!
+
+
+---------------------------------
+Follow me on Twitter: @MiroHibler
+---------------------------------
