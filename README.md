@@ -108,4 +108,4 @@ Inspired by [KeymapViewer](https://github.com/wwwjfy/KeymapViewer)
 
 Copyright © 2013 @[MiroHibler](http://twitter.com/MiroHibler)
 
-Licensed under the [**MIT**](./LICENSE.txt) license.
+Licensed under the [**MIT**](http://miro.mit-license.org) license.
