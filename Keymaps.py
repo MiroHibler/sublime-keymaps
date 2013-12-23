@@ -418,7 +418,7 @@ class CheatSheetRenderer(object):
 			if sublime.platform() != 'osx':
 				hr_ = hr_ + '\n' + u'{0} - CTRL, {1} - ALT, {2} - SHIFT'.format(PRETTY_KEYS['CTRL'], PRETTY_KEYS['ALT'], PRETTY_KEYS['SHIFT']).center(LINE_SIZE) + u'\n'
 
-		return hr_.format(datetime.now().strftime('%A %d %B %Y %H:%M').decode('utf-8'),
+		return hr_.format(datetime.now().strftime('%A %d %B %Y %H:%M').encode('utf-8').decode('utf-8'),
 			u'{0} keymaps found'.format(self.keymap_counter),
 			hr=hr)
 
