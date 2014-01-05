@@ -1,0 +1,16 @@
+
+New features in Keymaps v1.3.2:
+
+
+- Bug fixes:
+  - Fix for issue #15
+
+
+See more @ https://github.com/MiroHibler/sublime-keymaps
+
+Enjoy!
+
+
+---------------------------------
+Follow me on Twitter: @MiroHibler
+---------------------------------

@@ -314,6 +314,8 @@ class KeymapsExtractor(object):
 							if token in key_token:
 								ktoks.append(u'' + token)
 								key_token.remove(token)
+						if not key_token[0]:
+							continue
 						if key_token[0] in FTOKENS:
 							ktoks.append(FTOKENS[key_token[0]])
 						else:

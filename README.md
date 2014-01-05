@@ -60,6 +60,10 @@ Go to `Preferences` -> `Settings - User` and add this to the file:
 
 ## Changelog
 
+### v1.3.2
+
+* Bug fix for issue #15
+
 ### v1.3.1
 
 * Bug fix for issue #9: parse Default.sublime-keymap file in packages
