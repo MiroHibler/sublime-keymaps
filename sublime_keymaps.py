@@ -466,35 +466,15 @@ class MarkdownCheatSheetRenderer:
 
     @property
     def header(self):
-        hr = "+ {} +".format("-" * (LINE_SIZE - 4))
-        hr_ = (
-            "{hr}\n| "
-            + MY_NAME
-            + " v"
-            + VERSION
-            + " @ {0:<"
-            + str(LINE_SIZE - 9 - MY_NAME.__len__() - VERSION.__len__())
-            + "} |\n| {1:<76} |\n{hr}\n"
-        )
-
-        if self.settings["show_pretty_keys"] and sublime.platform() != "osx":
-            hr_ = (
-                hr_
-                + "\n"
-                + "{} - CTRL, {} - ALT, {} - SHIFT".format(
-                    PRETTY_KEYS["CTRL"], PRETTY_KEYS["ALT"], PRETTY_KEYS["SHIFT"]
-                ).center(LINE_SIZE)
-                + "\n"
-            )
-
-        return hr_.format(
-            datetime.now()
-            .strftime("%A %d %B %Y %H:%M")
-            .encode("utf-8")
-            .decode("utf-8"),
-            "{} keymaps found".format(self.keymap_counter),
-            hr=hr,
-        )
+        hr = "# Sublime Keymaps CheatSheet\n- {}\n- {}\n- {}\n"
+        version = "{} @ {}".format(MY_NAME, VERSION)
+        timestamp = datetime.now() \
+            .strftime("%A %d %B %Y %H:%M") \
+            .encode("utf-8") \
+            .decode("utf-8")
+        num_keymaps = "{} keymaps found".format(self.keymap_counter)
+        hr = hr.format(version, timestamp, num_keymaps)
+        return hr
 
     @property
     def view(self):
