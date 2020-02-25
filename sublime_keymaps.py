@@ -564,10 +564,8 @@ class MarkdownCheatSheetRenderer:
                 rgn = sublime.Region(insert_point, keymaps_view.size())
                 regions[(rgn.a, rgn.b)] = (rgn, data)
             else:  # 'header'
-                keymaps_view.run_command(
-                    "append",
-                    {"characters": "\n\n" + line.center(LINE_SIZE) + "\n"},
-                )
+                hdr_str = "\n\n##{:>45}\n|||\n|-|-|".format(line)
+                keymaps_view.run_command("append", {"characters": hdr_str})
             keymaps_view.run_command("append", {"characters": "\n"})
             keymaps_view.add_regions("keymaps", [v[0] for k, v in regions.items()], "")
 
