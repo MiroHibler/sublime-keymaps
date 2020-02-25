@@ -477,16 +477,15 @@ class MarkdownCheatSheetRenderer:
             + "} |\n| {1:<76} |\n{hr}\n"
         )
 
-        if self.settings["show_pretty_keys"]:
-            if sublime.platform() != "osx":
-                hr_ = (
-                    hr_
-                    + "\n"
-                    + "{} - CTRL, {} - ALT, {} - SHIFT".format(
-                        PRETTY_KEYS["CTRL"], PRETTY_KEYS["ALT"], PRETTY_KEYS["SHIFT"]
-                    ).center(LINE_SIZE)
-                    + "\n"
-                )
+        if self.settings["show_pretty_keys"] and sublime.platform() != "osx":
+            hr_ = (
+                hr_
+                + "\n"
+                + "{} - CTRL, {} - ALT, {} - SHIFT".format(
+                    PRETTY_KEYS["CTRL"], PRETTY_KEYS["ALT"], PRETTY_KEYS["SHIFT"]
+                ).center(LINE_SIZE)
+                + "\n"
+            )
 
         return hr_.format(
             datetime.now()
@@ -525,7 +524,7 @@ class MarkdownCheatSheetRenderer:
                 for idx, m in enumerate(keymaps, 1):
                     keys = ""
                     for key_token in m["keys"]:
-                        keys = keys + "[ " + " ".join(key_token) + " ]"
+                        keys = keys + " " + " ".join(key_token)
                     if self.settings["show_pretty_keys"]:
                         d = PRETTY_KEYS
                         pattern = re.compile(
@@ -534,7 +533,9 @@ class MarkdownCheatSheetRenderer:
                             + r")\b"
                         )
                         keys = pattern.sub(lambda x: d[x.group()], keys)
-                    line = "{}: {}".format(keys.rjust(LINE_SIZE // 2), m["caption"])
+                    justif_keys = keys.rjust(LINE_SIZE // 2)
+                    justif_capts = m["caption"].ljust(LINE_SIZE // 2)
+                    line = "| {} | {} |".format(justif_keys, justif_capts)
                     yield ("keymap", line, m)
 
     def render(self, formatted_keymaps):
