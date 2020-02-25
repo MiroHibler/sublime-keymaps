@@ -14,7 +14,8 @@ DEBUG = True
 
 LINE_SIZE = 80
 
-MY_NAME = "Keymaps"
+
+MY_NAME = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
 VERSION = "1.4.0"
 
 DEFAULT_SETTINGS = {
