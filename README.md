@@ -1,3 +1,6 @@
+![](https://github.com/MiroHibler/sublime-keymaps/workflows/CI/badge.svg)
+![](https://img.shields.io/packagecontrol/dt/Keymaps)
+
 # Sublime Text Keymap Helper
 
 Plugin for Sublime Text 3 that enables searching for keymaps by function as well as showing all enabled keymaps in a searchable color-coded Cheat Sheet.
