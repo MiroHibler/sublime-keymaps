@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
-import os
-import threading
-import logging
-import sublime, sublime_plugin
+import codecs
 import functools
-import codecs, json, re, string
-from itertools import groupby
+import json
+import logging
+import os
+import re
+import threading
 from datetime import datetime
+from itertools import groupby
+
+import sublime
+import sublime_plugin
 
 DEBUG = True
 
