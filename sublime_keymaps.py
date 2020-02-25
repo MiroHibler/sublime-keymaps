@@ -88,7 +88,7 @@ if sublime.platform() == "osx":
 FLAGS = re.VERBOSE | re.MULTILINE | re.DOTALL
 WHITESPACE = re.compile(r"[ \t\n\r]*", FLAGS)
 
-## LOGGING SETUP
+# LOGGING SETUP
 try:
     from logging import NullHandler
 except ImportError:
@@ -105,16 +105,14 @@ except ImportError:
 
 
 log = logging.getLogger(MY_NAME)
-log.handlers = []  ## hack to prevent extraneous handlers on ST2 auto-reload
+log.handlers = []  # hack to prevent extraneous handlers on ST2 auto-reload
 log.addHandler(NullHandler())
 log.setLevel(logging.INFO)
 if DEBUG:
     log.addHandler(logging.StreamHandler())
     log.setLevel(logging.DEBUG)
 
-"""
-	Main stuff
-"""
+"""Main stuff"""
 
 
 def find_keymap(view, data):
@@ -126,7 +124,7 @@ def find_keymap(view, data):
     if not os.path.isfile(path):
         em = (
             MY_NAME
-            + ":\n\nIt seems that this keymap is defined either in global keymap file\n\n"
+            + ":\n\nIt seems that this keymap is defined either in global keymap file\n\n"  # noqa: flake8 E501
         )
         em = (
             em
@@ -290,12 +288,12 @@ class KeymapsExtractor:
                 if "command" in dict:
                     if dict["command"] != keys["command"]:
                         continue
-                    if not "subcommand" in keys:
+                    if "subcommand" not in keys:
                         return dict["caption"]
-                    if not "args" in dict:
+                    if "args" not in dict:
                         continue
                     args = dict["args"]
-                    if not "command" in args:
+                    if "command" not in args:
                         continue
                     if not args["command"] == keys["subcommand"]:
                         continue
@@ -309,14 +307,14 @@ class KeymapsExtractor:
         for package in packages:
             commands = self.parseJSON(package["package"], "Default", "sublime-commands")
             for keymap in package["keymaps"]:
-                if not "keys" in keymap:
+                if "keys" not in keymap:
                     continue
                 caption = self.getCaption(commands, keymap)
                 if caption == "":
                     caption = keymap["command"].replace("_", " ").title()
                 keymap["caption"] = caption
 
-    def getKeymaps(self):
+    def getKeymaps(self):  # noqa: flake8 C901
         packages = []
         for package in self.active_packages:
             keymaps = self.parseJSON(
@@ -510,7 +508,6 @@ class CheatSheetRenderer:
     def format(self, packages):
         key_func = lambda m: m["package"]
         packages = sorted(packages, key=key_func)
-        myKeymaps = {}
 
         for package, keymaps in groupby(packages, key=key_func):
             keymaps = list(keymaps)
@@ -534,16 +531,16 @@ class CheatSheetRenderer:
 
     def render(self, formatted_keymaps):
         """This blocks the main thread, so make it quick"""
-        ## Header
+        # Header
         keymaps_view = self.view
         keymaps_view.run_command("select_all")
         keymaps_view.run_command("right_delete")
         keymaps_view.run_command("append", {"characters": self.header})
 
-        ## Region : match_dicts
+        # Region : match_dicts
         regions = {}
 
-        ## Keymap sections
+        # Keymap sections
         for linetype, line, data in formatted_keymaps:
             insert_point = keymaps_view.size()
             if linetype == "keymap":
@@ -565,14 +562,14 @@ class CheatSheetRenderer:
             keymaps_view.run_command("append", {"characters": "\n"})
             keymaps_view.add_regions("keymaps", [v[0] for k, v in regions.items()], "")
 
-        ## Store {Region : data} map in settings
-        ## TODO: Abstract this out to a storage class Storage.get(region) ==> data dict
-        ## Region() cannot be stored in settings, so convert to a primitive type
+        # Store {Region : data} map in settings
+        # TODO: Abstract this out to a storage class Storage.get(region) ==> data dict
+        # Region() cannot be stored in settings, so convert to a primitive type
         # d_ = regions
         d_ = {"{},{}".format(k[0], k[1]): v[1] for k, v in regions.items()}
         keymaps_view.settings().set("keymap_regions", d_)
 
-        ## Set syntax and settings
+        # Set syntax and settings
         keymaps_view.set_syntax_file(
             "Packages/" + MY_NAME + "/cheat_sheet.hidden-tmLanguage"
         )
@@ -592,7 +589,6 @@ class FindKeymapRenderer:
     def format(self, packages):
         key_func = lambda m: m["package"]
         packages = sorted(packages, key=key_func)
-        myKeymaps = {}
 
         for package, matches in groupby(packages, key=key_func):
             matches = list(matches)
@@ -620,7 +616,7 @@ class FindKeymapRenderer:
         window = sublime.active_window()
         self.panel_items = []
 
-        ## Keymap sections
+        # Keymap sections
         for package, keys, command, args, caption in keymaps:
             self.panel_items.append([caption, keys + " (" + package + ")"])
 
@@ -645,11 +641,11 @@ class WorkerThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        ## Extract in this thread
+        # Extract in this thread
         keymaps = self.extractor.extract()
         rendered = list(self.renderer.format(keymaps))
 
-        ## Render in main thread
+        # Render in main thread
         def render():
             self.renderer.render(rendered)
 
@@ -728,7 +724,7 @@ class NavigateKeymaps(sublime_plugin.TextCommand):
             sublime.status_message("No keymaps to navigate")
             return
 
-        ## NOTE: numbers stored in settings are coerced to floats or longs
+        # NOTE: numbers stored in settings are coerced to floats or longs
         selection = int(settings.get("selected_keymap", self.STARTING_POINT[direction]))
         selection = selection + self.DIRECTION[direction]
         try:
@@ -738,7 +734,7 @@ class NavigateKeymaps(sublime_plugin.TextCommand):
             selection = 0
 
         settings.set("selected_keymap", selection)
-        ## Create a new region for highlighting
+        # Create a new region for highlighting
         target = target.cover(target)
         view.add_regions("selection", [target], "selected", "dot")
         view.show(target)
@@ -756,19 +752,19 @@ class GotoKeymap(sublime_plugin.TextCommand):
         super().__init__(*args)
 
     def run(self, edit):
-        ## Get the idx of selected keymap region
+        # Get the idx of selected keymap region
         selection = int(self.view.settings().get("selected_keymap", -1))
-        ## Get the region
+        # Get the region
         selected_region = self.view.get_regions("keymaps")[selection]
 
-        ## Convert region to key used in keymaps_regions (this is tedious, but
-        ##	there is no other way to store regions with associated data)
+        # Convert region to key used in keymaps_regions (this is tedious, but
+        # there is no other way to store regions with associated data)
         data = self.view.settings().get("keymap_regions")[
             "{},{}".format(selected_region.a, selected_region.b)
         ]
 
         self.log.debug("Goto keymap at {package}".format(**data))
-        ## Open file for edit
+        # Open file for edit
         find_keymap(self.view, data)
 
 
@@ -791,7 +787,7 @@ class MouseGotoKeymap(sublime_plugin.TextCommand):
     def run(self, edit):
         if not self.view.settings().get("keymap_regions"):
             return
-        ## get selected line
+        # get selected line
         pos = self.view.sel()[0].end()
         keymap = self.get_keymaps_region(pos)
         if pos == 0 or keymap.empty():
@@ -799,12 +795,13 @@ class MouseGotoKeymap(sublime_plugin.TextCommand):
             return
         self.highlight(keymap)
 
-        ## Region returned from mouse event is different(?) from the region of keyboard event,
-        ## so we fix it by forcing region.b = region.a
+        # Region returned from mouse event is different(?)
+        # from the region of keyboard event,
+        # so we fix it by forcing region.b = region.a
         data = self.view.settings().get("keymap_regions")[
             "{},{}".format(keymap.a, keymap.b)
         ]
 
         self.log.debug("Goto keymap at {package}".format(**data))
-        ## Open file for edit
+        # Open file for edit
         find_keymap(self.view, data)
