@@ -251,7 +251,7 @@ class MarkdownCheatSheetCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         settings = Settings(self.view.settings().get("keymaps", {}))
         keymap_counter = KeymapScanCounter()
-        renderer = MarkdownCheatSheetRenderer(settings, self.view.window(), keymap_counter)
+        renderer = MarkdownCheatSheetRenderer(settings, self.view.window(), keymap_counter)  # noqa: flake8 E501
         do(renderer, keymap_counter)
 
 
