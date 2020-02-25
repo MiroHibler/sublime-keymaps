@@ -4,7 +4,7 @@ Install a version below v1.4.0 to continue using on Sublime Text 2.
 
 New features in Keymaps v1.4.0:
 
-
+- Export to MarkDown via the new command: "Keymaps: Markdown Cheat Sheet"
 
 
 

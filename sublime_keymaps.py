@@ -247,6 +247,14 @@ class CheatSheetCommand(sublime_plugin.TextCommand):
         do(renderer, keymap_counter)
 
 
+class MarkdownCheatSheetCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        settings = Settings(self.view.settings().get("keymaps", {}))
+        keymap_counter = KeymapScanCounter()
+        renderer = MarkdownCheatSheetRenderer(settings, self.view.window(), keymap_counter)  # noqa: flake8 E501
+        do(renderer, keymap_counter)
+
+
 class FindKeymapCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         settings = Settings(self.view.settings().get("keymaps", {}))
@@ -443,6 +451,117 @@ class KeymapsExtractor:
                         "args": args,
                         "caption": keys["caption"],
                     }
+
+
+class MarkdownCheatSheetRenderer:
+    def __init__(self, settings, window, keymap_counter):
+        self.settings = settings
+        self.window = window
+        self.keymap_counter = keymap_counter
+
+    @property
+    def view_name(self):
+        """The name of the new keymaps view. Defined in settings."""
+        return self.settings["keymaps_title"]
+
+    @property
+    def header(self):
+        hr = "# Sublime Keymaps CheatSheet\n- {}\n- {}\n- {}\n"
+        version = "{} @ {}".format(MY_NAME, VERSION)
+        timestamp = datetime.now() \
+            .strftime("%A %d %B %Y %H:%M") \
+            .encode("utf-8") \
+            .decode("utf-8")
+        num_keymaps = "{} keymaps found".format(self.keymap_counter)
+        hr = hr.format(version, timestamp, num_keymaps)
+        return hr
+
+    @property
+    def view(self):
+        existing_keymaps = [
+            v
+            for v in self.window.views()
+            if v.name() == self.view_name and v.is_scratch()
+        ]
+        if existing_keymaps:
+            v = existing_keymaps[0]
+        else:
+            v = self.window.new_file()
+            v.set_name(self.view_name)
+            v.set_scratch(True)
+            v.settings().set("cheat_sheet", True)
+        return v
+
+    def format(self, packages):
+        key_func = lambda m: m["package"]
+        packages = sorted(packages, key=key_func)
+
+        for package, keymaps in groupby(packages, key=key_func):
+            keymaps = list(keymaps)
+            if keymaps:
+                yield ("header", "{} ({})".format(package, len(keymaps)), {})
+
+                for idx, m in enumerate(keymaps, 1):
+                    keys = ""
+                    for key_token in m["keys"]:
+                        keys = keys + " " + " ".join(key_token)
+                    if self.settings["show_pretty_keys"]:
+                        d = PRETTY_KEYS
+                        pattern = re.compile(
+                            r"\b("
+                            + "|".join(re.escape(key) for key in d.keys())
+                            + r")\b"
+                        )
+                        keys = pattern.sub(lambda x: d[x.group()], keys)
+                    justif_keys = keys.rjust(LINE_SIZE // 2)
+                    justif_capts = m["caption"].ljust(LINE_SIZE // 2)
+                    line = "| {} | {} |".format(justif_keys, justif_capts)
+                    yield ("keymap", line, m)
+
+    def render(self, formatted_keymaps):
+        """This blocks the main thread, so make it quick"""
+        # Header
+        keymaps_view = self.view
+        keymaps_view.run_command("select_all")
+        keymaps_view.run_command("right_delete")
+        keymaps_view.run_command("append", {"characters": self.header})
+
+        # Region : match_dicts
+        regions = {}
+
+        # Keymap sections
+        for linetype, line, data in formatted_keymaps:
+            insert_point = keymaps_view.size()
+            if linetype == "keymap":
+                insert_space = insert_point
+                line_ = line.lstrip()
+                keymaps_view.run_command(
+                    "append",
+                    {"characters": "{}".format(" " * (len(line) - len(line_)))},
+                )
+                insert_point = insert_space + (keymaps_view.size() - insert_space)
+                keymaps_view.run_command("append", {"characters": line_})
+                rgn = sublime.Region(insert_point, keymaps_view.size())
+                regions[(rgn.a, rgn.b)] = (rgn, data)
+            else:  # 'header'
+                hdr_str = "\n\n##{:>45}\n|||\n|-|-|".format(line)
+                keymaps_view.run_command("append", {"characters": hdr_str})
+            keymaps_view.run_command("append", {"characters": "\n"})
+            keymaps_view.add_regions("keymaps", [v[0] for k, v in regions.items()], "")
+
+        # Store {Region : data} map in settings
+        # TODO: Abstract this out to a storage class Storage.get(region) ==> data dict
+        # Region() cannot be stored in settings, so convert to a primitive type
+        # d_ = regions
+        d_ = {"{},{}".format(k[0], k[1]): v[1] for k, v in regions.items()}
+        keymaps_view.settings().set("keymap_regions", d_)
+
+        # Set syntax and settings
+        keymaps_view.settings().set("line_padding_bottom", 2)
+        keymaps_view.settings().set("line_padding_top", 2)
+        keymaps_view.settings().set("word_wrap", False)
+        keymaps_view.settings().set("command_mode", True)
+        self.window.focus_view(keymaps_view)
 
 
 class CheatSheetRenderer:

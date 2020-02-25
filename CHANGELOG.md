@@ -2,6 +2,7 @@
 
 ### v1.4.0
 * Dropped support for Sublime Text 2
+* Export to MarkDown via the new command: "Keymaps: Markdown Cheat Sheet"
 
 ### v1.3.2
 
