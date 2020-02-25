@@ -1,3 +1,9 @@
+# python
 .DS_Store
 *.cache
 *.pyc
+.venv
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project

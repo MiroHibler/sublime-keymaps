@@ -1,6 +1,6 @@
 # Sublime Text Keymap Helper
 
-Plugin for Sublime Text 2/3 editor that enables searching for keymaps by function as well as showing all enabled keymaps in a searchable color-coded list - Cheat Sheet.
+Plugin for Sublime Text 3 that enables searching for keymaps by function as well as showing all enabled keymaps in a searchable color-coded Cheat Sheet.
 
 ## Features
 
@@ -59,6 +59,9 @@ Go to `Preferences` -> `Settings - User` and add this to the file:
 
 
 ## Changelog
+
+### v1.4.0
+* Dropped support for Sublime Text 2
 
 ### v1.3.2
 
