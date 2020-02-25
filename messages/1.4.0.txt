@@ -1,0 +1,18 @@
+Important! Dropped support for Sublime Text 2.
+Install a version below v1.4.0 to continue using on Sublime Text 2.
+
+
+New features in Keymaps v1.4.0:
+
+
+
+
+
+See more @ https://github.com/MiroHibler/sublime-keymaps
+
+Enjoy!
+
+
+---------------------------------
+Follow me on Twitter: @MiroHibler
+---------------------------------

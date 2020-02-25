@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-import codecs
 import functools
 import json
 import logging
@@ -14,12 +12,10 @@ import sublime_plugin
 
 DEBUG = True
 
-ST2 = sublime.version() < "3000"
-
 LINE_SIZE = 80
 
 MY_NAME = "Keymaps"
-VERSION = "1.3.1"
+VERSION = "1.4.0"
 
 DEFAULT_SETTINGS = {
     "keymaps_title": MY_NAME + " Cheat Sheet",
@@ -44,48 +40,48 @@ FTOKENS = {
 }
 
 PRETTY_KEYS = {
-    "CTRL": u"\u2303",
-    "ALT": u"\u2387",
-    "OPTION": u"\u2387",
-    "SUPER": u"\u2318",
-    "SHIFT": u"\u21E7",
-    "FORWARD_SLASH": u"/",
-    "BACKWARD_SLASH": u"\\",
-    "ENTER": u"\u23CE",
-    "LEFT": u"\u2190",
-    "UP": u"\u2191",
-    "RIGHT": u"\u2192",
-    "DOWN": u"\u2193",
-    "TAB": u"\u21E5",
-    "SPACE": u"\u2423",
-    "INSERT": u"\u2380",
-    "BACKSPACE": u"\u232B",
-    "DELETE": u"\u2326",
-    "CLEAR": u"\u2327",
-    "ESCAPE": u"\u238B",
-    "HOME": u"\u2353",
-    "END": u"\u234C",
-    "PAGEUP": u"\u235E",
-    "PAGEDOWN": u"\u2357",
-    "BREAK": u"\u2386",
-    "BACKQUOTE": u"\u0060",
-    "PLUS": u"+",
-    "EQUALS": u"=",
-    "MINUS": u"-",
-    "F01": u"F1",
-    "F02": u"F2",
-    "F03": u"F3",
-    "F04": u"F4",
-    "F05": u"F5",
-    "F06": u"F6",
-    "F07": u"F7",
-    "F08": u"F8",
-    "F09": u"F9",
+    "CTRL": "\u2303",
+    "ALT": "\u2387",
+    "OPTION": "\u2387",
+    "SUPER": "\u2318",
+    "SHIFT": "\u21E7",
+    "FORWARD_SLASH": "/",
+    "BACKWARD_SLASH": "\\",
+    "ENTER": "\u23CE",
+    "LEFT": "\u2190",
+    "UP": "\u2191",
+    "RIGHT": "\u2192",
+    "DOWN": "\u2193",
+    "TAB": "\u21E5",
+    "SPACE": "\u2423",
+    "INSERT": "\u2380",
+    "BACKSPACE": "\u232B",
+    "DELETE": "\u2326",
+    "CLEAR": "\u2327",
+    "ESCAPE": "\u238B",
+    "HOME": "\u2353",
+    "END": "\u234C",
+    "PAGEUP": "\u235E",
+    "PAGEDOWN": "\u2357",
+    "BREAK": "\u2386",
+    "BACKQUOTE": "\u0060",
+    "PLUS": "+",
+    "EQUALS": "=",
+    "MINUS": "-",
+    "F01": "F1",
+    "F02": "F2",
+    "F03": "F3",
+    "F04": "F4",
+    "F05": "F5",
+    "F06": "F6",
+    "F07": "F7",
+    "F08": "F8",
+    "F09": "F9",
 }
 
 if sublime.platform() == "osx":
-    PRETTY_KEYS["ALT"] = u"\u2325"
-    PRETTY_KEYS["OPTION"] = u"\u2325"
+    PRETTY_KEYS["ALT"] = "\u2325"
+    PRETTY_KEYS["OPTION"] = "\u2325"
 
 # shameless copy paste from json/decoder.py
 FLAGS = re.VERBOSE | re.MULTILINE | re.DOTALL
@@ -227,7 +223,7 @@ class Settings(dict):
     def __init__(self, user_settings):
         settings = DEFAULT_SETTINGS.copy()
         settings.update(user_settings)
-        super(Settings, self).__init__(settings)
+        super().__init__(settings)
 
 
 class ConcatJSONDecoder(json.JSONDecoder):
@@ -260,7 +256,7 @@ class FindKeymapCommand(sublime_plugin.TextCommand):
         do(renderer, keymap_counter)
 
 
-class KeymapsExtractor(object):
+class KeymapsExtractor:
     def __init__(self, active_packages, keymap_counter):
         self.active_packages = active_packages
         self.keymap_counter = keymap_counter
@@ -270,38 +266,22 @@ class KeymapsExtractor(object):
         # remove all occurance streamed comments (/* COMMENT */) from string
         string = re.sub(re.compile(b"//.*?\n"), "", string)
         # remove all occurance singleline comments (// COMMENT\n ) from string
-        string = re.sub(re.compile(b"/\*.*?\*/", re.DOTALL), "", string)
+        string = re.sub(re.compile(br"/\*.*?\*/", re.DOTALL), "", string)
         return string
 
     def parseJSON(self, package, name, ext):
-        if ST2:
-            path = os.path.join(sublime.packages_path(), package, name + "." + ext)
-            if not os.path.isfile(path):
-                path = os.path.join(sublime.packages_path(), package, "Default." + ext)
-                if not os.path.isfile(path):
-                    return None
-            with codecs.open(path) as f:
-                content = self.removeComments(f.read())
-            if f is not None:
-                f.close()
-            try:
-                parsedJSON = json.loads(content, cls=ConcatJSONDecoder)
-            except (ValueError):
-                return None
-            return parsedJSON[0]
-        else:
+        try:
+            resource = sublime.load_resource(
+                "Packages/" + package + "/" + name + "." + ext
+            )
+        except (OSError):
             try:
                 resource = sublime.load_resource(
-                    "Packages/" + package + "/" + name + "." + ext
+                    "Packages/" + package + "/Default." + ext
                 )
-            except (IOError):
-                try:
-                    resource = sublime.load_resource(
-                        "Packages/" + package + "/Default." + ext
-                    )
-                except (IOError):
-                    return None
-            return sublime.decode_value(resource)
+            except (OSError):
+                return None
+        return sublime.decode_value(resource)
 
     def getCaption(self, commands, keys):
         if commands:
@@ -352,7 +332,7 @@ class KeymapsExtractor(object):
                         continue
                     item["keys"] = []
                     for key_map in keys:
-                        km = key_map.replace(u" ", u"").upper().split("+")
+                        km = key_map.replace(" ", "").upper().split("+")
                         item["keys"].append(km)
                     # Sort keys
                     skeys = []
@@ -360,7 +340,7 @@ class KeymapsExtractor(object):
                         ktoks = []
                         for token in TOKENS:
                             if token in key_token:
-                                ktoks.append(u"" + token)
+                                ktoks.append("" + token)
                                 key_token.remove(token)
                         if not key_token[0]:
                             continue
@@ -466,7 +446,7 @@ class KeymapsExtractor(object):
                     }
 
 
-class CheatSheetRenderer(object):
+class CheatSheetRenderer:
     def __init__(self, settings, window, keymap_counter):
         self.settings = settings
         self.window = window
@@ -479,9 +459,9 @@ class CheatSheetRenderer(object):
 
     @property
     def header(self):
-        hr = u"+ {0} +".format("-" * (LINE_SIZE - 4))
+        hr = "+ {} +".format("-" * (LINE_SIZE - 4))
         hr_ = (
-            u"{hr}\n| "
+            "{hr}\n| "
             + MY_NAME
             + " v"
             + VERSION
@@ -495,10 +475,10 @@ class CheatSheetRenderer(object):
                 hr_ = (
                     hr_
                     + "\n"
-                    + u"{0} - CTRL, {1} - ALT, {2} - SHIFT".format(
+                    + "{} - CTRL, {} - ALT, {} - SHIFT".format(
                         PRETTY_KEYS["CTRL"], PRETTY_KEYS["ALT"], PRETTY_KEYS["SHIFT"]
                     ).center(LINE_SIZE)
-                    + u"\n"
+                    + "\n"
                 )
 
         return hr_.format(
@@ -506,7 +486,7 @@ class CheatSheetRenderer(object):
             .strftime("%A %d %B %Y %H:%M")
             .encode("utf-8")
             .decode("utf-8"),
-            u"{0} keymaps found".format(self.keymap_counter),
+            "{} keymaps found".format(self.keymap_counter),
             hr=hr,
         )
 
@@ -534,12 +514,12 @@ class CheatSheetRenderer(object):
         for package, keymaps in groupby(packages, key=key_func):
             keymaps = list(keymaps)
             if keymaps:
-                yield ("header", u"{0} ({1})".format(package, len(keymaps)), {})
+                yield ("header", "{} ({})".format(package, len(keymaps)), {})
 
                 for idx, m in enumerate(keymaps, 1):
                     keys = ""
                     for key_token in m["keys"]:
-                        keys = keys + u"[ " + " ".join(key_token) + u" ]"
+                        keys = keys + "[ " + " ".join(key_token) + " ]"
                     if self.settings["show_pretty_keys"]:
                         d = PRETTY_KEYS
                         pattern = re.compile(
@@ -548,23 +528,16 @@ class CheatSheetRenderer(object):
                             + r")\b"
                         )
                         keys = pattern.sub(lambda x: d[x.group()], keys)
-                    line = u"{0}: {1}".format(keys.rjust(LINE_SIZE // 2), m["caption"])
+                    line = "{}: {}".format(keys.rjust(LINE_SIZE // 2), m["caption"])
                     yield ("keymap", line, m)
 
     def render(self, formatted_keymaps):
         """This blocks the main thread, so make it quick"""
         ## Header
         keymaps_view = self.view
-        ## run_command('append') doesn't work well in ST2(?)
-        if ST2:
-            edit = keymaps_view.begin_edit()
-            keymaps_view.erase(edit, sublime.Region(0, keymaps_view.size()))
-            keymaps_view.insert(edit, keymaps_view.size(), self.header)
-            keymaps_view.end_edit(edit)
-        else:  # ST3
-            keymaps_view.run_command("select_all")
-            keymaps_view.run_command("right_delete")
-            keymaps_view.run_command("append", {"characters": self.header})
+        keymaps_view.run_command("select_all")
+        keymaps_view.run_command("right_delete")
+        keymaps_view.run_command("append", {"characters": self.header})
 
         ## Region : match_dicts
         regions = {}
@@ -572,55 +545,30 @@ class CheatSheetRenderer(object):
         ## Keymap sections
         for linetype, line, data in formatted_keymaps:
             insert_point = keymaps_view.size()
-            if ST2:
-                edit = keymaps_view.begin_edit()
-                if linetype == "keymap":
-                    insert_space = insert_point
-                    line_ = line.lstrip()
-                    keymaps_view.insert(
-                        edit,
-                        insert_space,
-                        u"{0}".format(" " * (len(line) - len(line_))),
-                    )
-                    insert_point = insert_space + (keymaps_view.size() - insert_space)
-                    keymaps_view.insert(edit, insert_point, line_)
-                    rgn = sublime.Region(insert_point, keymaps_view.size())
-                    regions[(rgn.a, rgn.b)] = (rgn, data)
-                else:  # 'header'
-                    # TODO: Check if this .rstrip() is doing right
-                    keymaps_view.insert(
-                        edit,
-                        insert_point,
-                        u"\n\n" + line.center(LINE_SIZE).rstrip() + u"\n",
-                    )
-                keymaps_view.insert(edit, keymaps_view.size(), u"\n")
-                keymaps_view.end_edit(edit)
-            else:  # ST3
-                if linetype == "keymap":
-                    insert_space = insert_point
-                    line_ = line.lstrip()
-                    keymaps_view.run_command(
-                        "append",
-                        {"characters": u"{0}".format(" " * (len(line) - len(line_)))},
-                    )
-                    insert_point = insert_space + (keymaps_view.size() - insert_space)
-                    keymaps_view.run_command("append", {"characters": line_})
-                    rgn = sublime.Region(insert_point, keymaps_view.size())
-                    regions[(rgn.a, rgn.b)] = (rgn, data)
-                else:  # 'header'
-                    keymaps_view.run_command(
-                        "append",
-                        {"characters": u"\n\n" + line.center(LINE_SIZE) + u"\n"},
-                    )
-                keymaps_view.run_command("append", {"characters": u"\n"})
-
+            if linetype == "keymap":
+                insert_space = insert_point
+                line_ = line.lstrip()
+                keymaps_view.run_command(
+                    "append",
+                    {"characters": "{}".format(" " * (len(line) - len(line_)))},
+                )
+                insert_point = insert_space + (keymaps_view.size() - insert_space)
+                keymaps_view.run_command("append", {"characters": line_})
+                rgn = sublime.Region(insert_point, keymaps_view.size())
+                regions[(rgn.a, rgn.b)] = (rgn, data)
+            else:  # 'header'
+                keymaps_view.run_command(
+                    "append",
+                    {"characters": "\n\n" + line.center(LINE_SIZE) + "\n"},
+                )
+            keymaps_view.run_command("append", {"characters": "\n"})
             keymaps_view.add_regions("keymaps", [v[0] for k, v in regions.items()], "")
 
         ## Store {Region : data} map in settings
         ## TODO: Abstract this out to a storage class Storage.get(region) ==> data dict
         ## Region() cannot be stored in settings, so convert to a primitive type
         # d_ = regions
-        d_ = dict(("{0},{1}".format(k[0], k[1]), v[1]) for k, v in regions.items())
+        d_ = {"{},{}".format(k[0], k[1]): v[1] for k, v in regions.items()}
         keymaps_view.settings().set("keymap_regions", d_)
 
         ## Set syntax and settings
@@ -634,7 +582,7 @@ class CheatSheetRenderer(object):
         self.window.focus_view(keymaps_view)
 
 
-class FindKeymapRenderer(object):
+class FindKeymapRenderer:
     def __init__(self, settings, window, keymap_counter):
         self.settings = settings
         self.window = window
@@ -652,7 +600,7 @@ class FindKeymapRenderer(object):
                 for m in matches:
                     keys = ""
                     for key_token in m["keys"]:
-                        keys = keys + u"[ " + " ".join(key_token) + u" ]"
+                        keys = keys + "[ " + " ".join(key_token) + " ]"
                     if self.settings["show_pretty_keys"]:
                         d = PRETTY_KEYS
                         pattern = re.compile(
@@ -673,7 +621,7 @@ class FindKeymapRenderer(object):
 
         ## Keymap sections
         for package, keys, command, args, caption in keymaps:
-            self.panel_items.append([caption, keys + u" (" + package + u")"])
+            self.panel_items.append([caption, keys + " (" + package + ")"])
 
         # show_quick_panel(items, on_done, <flags>, <selected_index>, <on_highlighted>)
         window.show_quick_panel(
@@ -707,7 +655,7 @@ class WorkerThread(threading.Thread):
         sublime.set_timeout(render, 10)
 
 
-class ThreadProgress(object):
+class ThreadProgress:
     def __init__(self, thread, message, success_message, keymap_counter):
         self.thread = thread
         self.message = message
@@ -739,7 +687,7 @@ class ThreadProgress(object):
         sublime.set_timeout(lambda: self.run(i), 100)
 
 
-class KeymapScanCounter(object):
+class KeymapScanCounter:
     """Thread-safe counter used to update the status bar"""
 
     def __init__(self):
@@ -748,7 +696,7 @@ class KeymapScanCounter(object):
         self.log = logging.getLogger(MY_NAME)
 
     def __call__(self, filepath):
-        self.log.debug(u"Scanning %s" % filepath)
+        self.log.debug("Scanning %s" % filepath)
         self.increment()
 
     def __str__(self):
@@ -769,7 +717,7 @@ class NavigateKeymaps(sublime_plugin.TextCommand):
     STARTING_POINT = {"forward": -1, "backward": 0}
 
     def __init__(self, view):
-        super(NavigateKeymaps, self).__init__(view)
+        super().__init__(view)
 
     def run(self, edit, direction):
         view = self.view
@@ -804,7 +752,7 @@ class ClearSelection(sublime_plugin.TextCommand):
 class GotoKeymap(sublime_plugin.TextCommand):
     def __init__(self, *args):
         self.log = logging.getLogger(MY_NAME + ".nav")
-        super(GotoKeymap, self).__init__(*args)
+        super().__init__(*args)
 
     def run(self, edit):
         ## Get the idx of selected keymap region
@@ -815,10 +763,10 @@ class GotoKeymap(sublime_plugin.TextCommand):
         ## Convert region to key used in keymaps_regions (this is tedious, but
         ##	there is no other way to store regions with associated data)
         data = self.view.settings().get("keymap_regions")[
-            "{0},{1}".format(selected_region.a, selected_region.b)
+            "{},{}".format(selected_region.a, selected_region.b)
         ]
 
-        self.log.debug(u"Goto keymap at {package}".format(**data))
+        self.log.debug("Goto keymap at {package}".format(**data))
         ## Open file for edit
         find_keymap(self.view, data)
 
@@ -826,7 +774,7 @@ class GotoKeymap(sublime_plugin.TextCommand):
 class MouseGotoKeymap(sublime_plugin.TextCommand):
     def __init__(self, *args):
         self.log = logging.getLogger(MY_NAME + ".nav")
-        super(MouseGotoKeymap, self).__init__(*args)
+        super().__init__(*args)
 
     def highlight(self, region):
         target = region.cover(region)
@@ -853,9 +801,9 @@ class MouseGotoKeymap(sublime_plugin.TextCommand):
         ## Region returned from mouse event is different(?) from the region of keyboard event,
         ## so we fix it by forcing region.b = region.a
         data = self.view.settings().get("keymap_regions")[
-            "{0},{1}".format(keymap.a, keymap.b)
+            "{},{}".format(keymap.a, keymap.b)
         ]
 
-        self.log.debug(u"Goto keymap at {package}".format(**data))
+        self.log.debug("Goto keymap at {package}".format(**data))
         ## Open file for edit
         find_keymap(self.view, data)
