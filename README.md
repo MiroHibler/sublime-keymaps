@@ -48,11 +48,12 @@ Here's an example of possible output (OS X, truncated):
 With [Package Control](http://wbond.net/sublime_packages/package_control):
 
 1. Run “Package Control: Install Package” command, find and install `Keymaps` plugin.
-2. Restart ST editor (if required)
+2. Restart Sublime Text (recommended)
+
 
 ## Options
 
-~~Mac~~ ALL users can now opt for pretty simbols instead of text for keys.
+~~Mac~~ ALL users can now opt for pretty symbols instead of text for keys.
 
 Go to `Preferences` -> `Settings - User` and add this to the file:
 
@@ -64,6 +65,7 @@ Go to `Preferences` -> `Settings - User` and add this to the file:
 ## Acknowledgments
 
 Inspired by [KeymapViewer](https://github.com/wwwjfy/KeymapViewer)
+
 
 ## Copyright and license
 
