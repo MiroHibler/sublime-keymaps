@@ -17,6 +17,11 @@
 						"id": "cheat_sheet",
 						"caption": "Cheat Sheet",
 						"command": "cheat_sheet"
+					},
+					{
+						"id": "markdown_cheat_sheet",
+						"caption": "Markdown Cheat Sheet",
+						"command": "markdown_cheat_sheet"
 					}
 				]
 			}
